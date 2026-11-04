@@ -1,0 +1,74 @@
+<UserControl x:Class="CoachDesk.Desktop.Views.DietPlanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{Binding Advisee.FullName}" Style="{StaticResource SelectedAdviseeNameText}" />
+                <TextBlock Text="Configura comidas, porciones y macronutrientes." Style="{StaticResource CardSubtitleText}" />
+            </StackPanel>
+            <Button Grid.Column="1" Content="Volver"
+                    Command="{Binding DataContext.BackToDashboardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Style="{StaticResource QuickActionButton}" />
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="0,20,0,12">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="2*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,12,0">
+                <TextBlock Text="Nombre del plan" Style="{StaticResource FieldLabelText}" />
+                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBox}" Margin="0,5,0,0" />
+            </StackPanel>
+            <Border Grid.Column="1" Style="{StaticResource MacroCard}"><StackPanel><TextBlock Text="Calorías" Style="{StaticResource MacroLabel}" /><TextBlock Text="{Binding TotalCalories, StringFormat={}{0:0} kcal}" Style="{StaticResource MacroValue}" /></StackPanel></Border>
+            <Border Grid.Column="2" Style="{StaticResource MacroCard}"><StackPanel><TextBlock Text="Proteína" Style="{StaticResource MacroLabel}" /><TextBlock Text="{Binding TotalProteinGrams, StringFormat={}{0:0.0} g}" Style="{StaticResource MacroValue}" /></StackPanel></Border>
+            <Border Grid.Column="3" Style="{StaticResource MacroCard}"><StackPanel><TextBlock Text="Carbohidratos" Style="{StaticResource MacroLabel}" /><TextBlock Text="{Binding TotalCarbohydratesGrams, StringFormat={}{0:0.0} g}" Style="{StaticResource MacroValue}" /></StackPanel></Border>
+            <Border Grid.Column="4" Style="{StaticResource MacroCard}"><StackPanel><TextBlock Text="Grasas" Style="{StaticResource MacroLabel}" /><TextBlock Text="{Binding TotalFatGrams, StringFormat={}{0:0.0} g}" Style="{StaticResource MacroValue}" /></StackPanel></Border>
+        </Grid>
+
+        <StackPanel Grid.Row="2">
+            <Border Background="#FFF5E7" CornerRadius="5" Padding="10" Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding ErrorMessage}" Foreground="#9A5500" /></Border>
+            <Border Background="#E4F3EA" CornerRadius="5" Padding="10" Margin="0,8,0,0" Visibility="{Binding HasSuccess, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding SuccessMessage}" Foreground="#1D6A3A" /></Border>
+        </StackPanel>
+
+        <TabControl Grid.Row="3" Margin="0,12,0,12" ItemsSource="{Binding Meals}" Style="{StaticResource MealTabControl}">
+            <TabControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding Title}" Margin="12,5" /></DataTemplate></TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <Grid Margin="14">
+                        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" RowHeight="38" Style="{StaticResource FoodDataGrid}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Alimento" Binding="{Binding FoodName, UpdateSourceTrigger=PropertyChanged}" Width="2*" />
+                                <DataGridTextColumn Header="Porción" Binding="{Binding Portion, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                <DataGridTextColumn Header="Kcal" Binding="{Binding Calories, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                                <DataGridTextColumn Header="Proteína (g)" Binding="{Binding ProteinGrams, UpdateSourceTrigger=PropertyChanged}" Width="95" />
+                                <DataGridTextColumn Header="Carbohidratos (g)" Binding="{Binding CarbohydratesGrams, UpdateSourceTrigger=PropertyChanged}" Width="125" />
+                                <DataGridTextColumn Header="Grasas (g)" Binding="{Binding FatGrams, UpdateSourceTrigger=PropertyChanged}" Width="90" />
+                                <DataGridTemplateColumn Width="46"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="×" Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource RemoveButton}" /></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Button Grid.Row="1" Content="+ Agregar alimento" Command="{Binding AddItemCommand}" HorizontalAlignment="Left" Margin="0,12,0,0" Style="{StaticResource QuickActionButton}" />
+                    </Grid>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+
+        <Grid Grid.Row="4">
+            <StackPanel>
+                <TextBlock Text="Notas para el asesorado" Style="{StaticResource FieldLabelText}" />
+                <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Width="400" Height="42" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource InputTextBox}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                <Button Content="Exportar PDF" Command="{Binding ExportPdfCommand}" Style="{StaticResource QuickActionButton}" />
+                <Button Content="Guardar plan" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Width="150" Margin="0,0,0,10" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
