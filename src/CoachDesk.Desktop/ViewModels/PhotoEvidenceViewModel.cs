@@ -12,6 +12,7 @@ public sealed class PhotoEvidenceViewModel : ViewModelBase
 {
     private readonly IPhotoEvidenceService _service;
     private int _adviseeId;
+    private int _selectedPeriod = 1;
     private int _selectedMonth = 1;
     private string? _message;
     private bool _isUploading;
@@ -23,6 +24,7 @@ public sealed class PhotoEvidenceViewModel : ViewModelBase
     }
 
     public ObservableCollection<PhotoEvidenceDto> Photos { get; } = [];
+    public int SelectedPeriod { get => _selectedPeriod; set { if (SetProperty(ref _selectedPeriod, value)) _ = LoadAsync(); } }
     public IEnumerable<int> Months => Enumerable.Range(0, 11);
     public int SelectedMonth
     {
@@ -55,7 +57,7 @@ public sealed class PhotoEvidenceViewModel : ViewModelBase
         {
             var photos = await _service.GetAsync(_adviseeId);
             Photos.Clear();
-            foreach (var photo in photos.Where(photo => photo.Month == SelectedMonth)) Photos.Add(photo);
+            foreach (var photo in photos.Where(photo => photo.Period == SelectedPeriod && photo.Month == SelectedMonth)) Photos.Add(photo);
         }
         catch (Exception) { Message = "No fue posible cargar las evidencias fotográficas."; }
     }
@@ -72,7 +74,7 @@ public sealed class PhotoEvidenceViewModel : ViewModelBase
         IsUploading = true; Message = null;
         try
         {
-            await _service.UploadAsync(_adviseeId, SelectedMonth, type, info.Name, contentType, await File.ReadAllBytesAsync(info.FullName));
+            await _service.UploadAsync(_adviseeId, SelectedPeriod, SelectedMonth, type, info.Name, contentType, await File.ReadAllBytesAsync(info.FullName));
             await LoadAsync();
             Message = $"Fotografía {type.ToLowerInvariant()} guardada para el mes {SelectedMonth}.";
         }

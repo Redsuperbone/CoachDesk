@@ -15,6 +15,8 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
     private bool _isSaving;
     private string? _errorMessage;
     private string? _successMessage;
+    private IReadOnlyList<AnthropometricAssessmentDto> _assessments = [];
+    private int _selectedPeriod = 1;
 
     public AnthropometricRecordViewModel(IAnthropometricService anthropometricService, IPhotoEvidenceService photoEvidenceService)
     {
@@ -22,10 +24,24 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
         Rows = new ObservableCollection<AnthropometricMetricRowViewModel>(CreateRows());
         Photos = new PhotoEvidenceViewModel(photoEvidenceService);
         SaveCommand = new AsyncRelayCommand(_ => SaveAsync(), _ => CanSave);
+        NewPeriodCommand = new RelayCommand(_ => CreateNewPeriod());
     }
 
     public ObservableCollection<AnthropometricMetricRowViewModel> Rows { get; }
     public PhotoEvidenceViewModel Photos { get; }
+    public ObservableCollection<int> Periods { get; } = [];
+    public int SelectedPeriod
+    {
+        get => _selectedPeriod;
+        set
+        {
+            if (SetProperty(ref _selectedPeriod, value))
+            {
+                Photos.SelectedPeriod = value;
+                PopulateSelectedPeriod();
+            }
+        }
+    }
     public AdviseeSummaryDto? Advisee { get => _advisee; private set => SetProperty(ref _advisee, value); }
     public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
@@ -35,6 +51,7 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
     public bool HasSuccess => !string.IsNullOrWhiteSpace(SuccessMessage);
     public bool CanSave => Advisee is not null && !IsLoading && !IsSaving && Rows.All(row => !row.HasErrors);
     public AsyncRelayCommand SaveCommand { get; }
+    public RelayCommand NewPeriodCommand { get; }
 
     public async Task LoadForAsync(AdviseeSummaryDto advisee)
     {
@@ -48,11 +65,12 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
         {
             var profile = await _anthropometricService.GetProfileAsync(advisee.Id);
             await Photos.LoadForAsync(advisee.Id);
-            ClearRows();
-            foreach (var assessment in profile.Assessments.Where(item => item.MonthNumber is >= 1 and <= 10))
-            {
-                SetMonth(assessment);
-            }
+            _assessments = profile.Assessments;
+            Periods.Clear();
+            foreach (var period in _assessments.Select(item => item.Period).Where(period => period >= 1).Distinct().OrderBy(period => period)) Periods.Add(period);
+            if (Periods.Count == 0) Periods.Add(1);
+            SelectedPeriod = Periods.Max();
+            await Photos.LoadForAsync(advisee.Id);
         }
         catch (ApiException exception)
         {
@@ -88,7 +106,9 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
 
         try
         {
-            await _anthropometricService.SaveProfileAsync(BuildProfile());
+            var profile = BuildProfile();
+            await _anthropometricService.SaveProfileAsync(profile);
+            _assessments = _assessments.Where(item => item.Period != SelectedPeriod).Concat(profile.Assessments).ToArray();
             SuccessMessage = "Expediente antropométrico guardado correctamente.";
         }
         catch (ApiException exception)
@@ -114,6 +134,7 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
 
     private AnthropometricAssessmentDto BuildAssessment(int month) => new()
     {
+        Period = SelectedPeriod,
         MonthNumber = month,
         WeightKg = GetRow("weight").GetValue(month),
         HeightCm = GetRow("height").GetValue(month),
@@ -140,6 +161,29 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
         GetRow("hip").SetValue(month, value.HipCm);
         GetRow("arm").SetValue(month, value.ArmCm);
         GetRow("thigh").SetValue(month, value.ThighCm);
+    }
+
+    private void PopulateSelectedPeriod()
+    {
+        ClearRows();
+        foreach (var assessment in _assessments.Where(item => item.Period == SelectedPeriod && item.MonthNumber is >= 1 and <= 10)) SetMonth(assessment);
+    }
+
+    private void CreateNewPeriod()
+    {
+        var completedMonths = _assessments.Where(item => item.Period == SelectedPeriod && item.MonthNumber is >= 1 and <= 10).Select(item => item.MonthNumber).Distinct().Count();
+        if (completedMonths < 10)
+        {
+            ErrorMessage = "Completa los 10 meses del ciclo actual antes de abrir un nuevo ciclo.";
+            OnPropertyChanged(nameof(HasError));
+            return;
+        }
+
+        var nextPeriod = Periods.DefaultIfEmpty(0).Max() + 1;
+        Periods.Add(nextPeriod);
+        SelectedPeriod = nextPeriod;
+        SuccessMessage = $"Ciclo {nextPeriod} creado. Puedes registrar nuevamente los meses 1 al 10.";
+        OnPropertyChanged(nameof(HasSuccess));
     }
 
     private void ClearRows()

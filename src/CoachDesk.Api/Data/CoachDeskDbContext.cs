@@ -42,8 +42,8 @@ public sealed class CoachDeskDbContext(DbContextOptions<CoachDeskDbContext> opti
         });
         builder.Entity<Measurement>(entity =>
         {
-            entity.ToTable("mediciones"); entity.HasKey(x => x.MeasurementId); entity.HasIndex(x => new { x.ClientNumber, x.Month }).IsUnique();
-            entity.Property(x => x.MeasurementId).HasColumnName("medicion_id"); entity.Property(x => x.ClientNumber).HasColumnName("numero_cliente"); entity.Property(x => x.Month).HasColumnName("mes"); entity.Property(x => x.MeasurementDate).HasColumnName("fecha_medicion");
+            entity.ToTable("mediciones"); entity.HasKey(x => x.MeasurementId); entity.HasIndex(x => new { x.ClientNumber, x.Period, x.Month }).IsUnique();
+            entity.Property(x => x.MeasurementId).HasColumnName("medicion_id"); entity.Property(x => x.ClientNumber).HasColumnName("numero_cliente"); entity.Property(x => x.Period).HasColumnName("periodo"); entity.Property(x => x.Month).HasColumnName("mes"); entity.Property(x => x.MeasurementDate).HasColumnName("fecha_medicion");
             entity.Property(x => x.Weight).HasColumnName("peso").HasPrecision(5, 2); entity.Property(x => x.Height).HasColumnName("estatura").HasPrecision(5, 2);
             entity.Property(x => x.Neck).HasColumnName("cuello").HasPrecision(5, 2); entity.Property(x => x.Chest).HasColumnName("pecho").HasPrecision(5, 2); entity.Property(x => x.Waist).HasColumnName("cintura").HasPrecision(5, 2); entity.Property(x => x.Hip).HasColumnName("cadera").HasPrecision(5, 2);
             entity.Property(x => x.Leg).HasColumnName("pierna").HasPrecision(5, 2); entity.Property(x => x.Biceps).HasColumnName("biceps").HasPrecision(5, 2); entity.Property(x => x.Calf).HasColumnName("pantorrilla").HasPrecision(5, 2);
