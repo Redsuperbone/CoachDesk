@@ -11,3 +11,4 @@
 
 # Local configuration and secrets
 appsettings.Local.json
+appsettings.Development.json

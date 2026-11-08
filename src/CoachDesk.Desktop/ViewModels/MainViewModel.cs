@@ -14,6 +14,7 @@ public sealed class MainViewModel : ViewModelBase
         IAdviseeService adviseeService,
         IAnthropometricService anthropometricService,
         INutritionService nutritionService,
+        IAppointmentService appointmentService,
         IMealPlanPdfExporter pdfExporter,
         IFileDialogService fileDialogService)
     {
@@ -21,10 +22,11 @@ public sealed class MainViewModel : ViewModelBase
         AdviseeSelector = new AdviseeSelectorViewModel(adviseeService);
         AnthropometricRecord = new AnthropometricRecordViewModel(anthropometricService);
         DietPlan = new DietPlanViewModel(nutritionService, pdfExporter, fileDialogService);
+        AppointmentManager = new AppointmentsViewModel(appointmentService);
         OpenAnthropometricCommand = new AsyncRelayCommand(_ => OpenAnthropometricAsync(), _ => SelectedAdvisee is not null);
         OpenNutritionCommand = new AsyncRelayCommand(_ => OpenNutritionAsync(), _ => SelectedAdvisee is not null);
         BackToDashboardCommand = new RelayCommand(_ => CurrentPage = MainPage.Dashboard);
-        OpenAppointmentsCommand = new RelayCommand(_ => CurrentPage = MainPage.Appointments);
+        OpenAppointmentsCommand = new AsyncRelayCommand(_ => OpenAppointmentsAsync());
         OpenRoutinesCommand = new RelayCommand(_ => CurrentPage = MainPage.Routines);
         AdviseeSelector.PropertyChanged += (_, eventArgs) =>
         {
@@ -73,12 +75,13 @@ public sealed class MainViewModel : ViewModelBase
 
     public AnthropometricRecordViewModel AnthropometricRecord { get; }
     public DietPlanViewModel DietPlan { get; }
+    public AppointmentsViewModel AppointmentManager { get; }
 
     public AsyncRelayCommand OpenAnthropometricCommand { get; }
     public AsyncRelayCommand OpenNutritionCommand { get; }
 
     public RelayCommand BackToDashboardCommand { get; }
-    public RelayCommand OpenAppointmentsCommand { get; }
+    public AsyncRelayCommand OpenAppointmentsCommand { get; }
     public RelayCommand OpenRoutinesCommand { get; }
 
     public Task InitializeAsync() => AdviseeSelector.LoadAsync();
@@ -103,5 +106,11 @@ public sealed class MainViewModel : ViewModelBase
 
         CurrentPage = MainPage.Nutrition;
         await DietPlan.LoadForAsync(SelectedAdvisee);
+    }
+
+    private async Task OpenAppointmentsAsync()
+    {
+        CurrentPage = MainPage.Appointments;
+        await AppointmentManager.LoadAsync();
     }
 }

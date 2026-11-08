@@ -47,10 +47,10 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Alimento" Binding="{Binding FoodName, UpdateSourceTrigger=PropertyChanged}" Width="2*" />
                                 <DataGridTextColumn Header="Porción" Binding="{Binding Portion, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-                                <DataGridTextColumn Header="Kcal" Binding="{Binding Calories, UpdateSourceTrigger=PropertyChanged}" Width="80" />
-                                <DataGridTextColumn Header="Proteína (g)" Binding="{Binding ProteinGrams, UpdateSourceTrigger=PropertyChanged}" Width="95" />
-                                <DataGridTextColumn Header="Carbohidratos (g)" Binding="{Binding CarbohydratesGrams, UpdateSourceTrigger=PropertyChanged}" Width="125" />
-                                <DataGridTextColumn Header="Grasas (g)" Binding="{Binding FatGrams, UpdateSourceTrigger=PropertyChanged}" Width="90" />
+                                <DataGridTextColumn Header="Kcal" Binding="{Binding Calories, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0.##}}" Width="80" />
+                                <DataGridTextColumn Header="Proteína (g)" Binding="{Binding ProteinGrams, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0.##}}" Width="95" />
+                                <DataGridTextColumn Header="Carbohidratos (g)" Binding="{Binding CarbohydratesGrams, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0.##}}" Width="125" />
+                                <DataGridTextColumn Header="Grasas (g)" Binding="{Binding FatGrams, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0.##}}" Width="90" />
                                 <DataGridTemplateColumn Width="46"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="×" Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource RemoveButton}" /></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>

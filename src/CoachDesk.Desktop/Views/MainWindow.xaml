@@ -14,7 +14,7 @@
                     <Separator Margin="0,15,0,15" Background="#35465D" />
                 </StackPanel>
                 <StackPanel Grid.Row="1">
-                    <Button Content="▣  Dashboard General" Style="{StaticResource NavButton}" />
+                    <Button Content="▣  Dashboard General" Command="{Binding BackToDashboardCommand}" Style="{StaticResource NavButton}" />
                     <Button Content="▤  Expediente y Perfil" Command="{Binding OpenAnthropometricCommand}" Style="{StaticResource NavButton}" />
                     <Button Content="◉  Gestión de Citas" Command="{Binding OpenAppointmentsCommand}" Style="{StaticResource NavButton}" />
                     <Button Content="⚑  Constructor Rutinas" Command="{Binding OpenRoutinesCommand}" Style="{StaticResource NavButton}" />
@@ -97,7 +97,7 @@
             </Border>
             <Border Grid.Row="1" Margin="0" Style="{StaticResource ContentCard}"
                     Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Appointments}">
-                <views:AppointmentsView />
+                <views:AppointmentsView DataContext="{Binding AppointmentManager}" />
             </Border>
             <Border Grid.Row="1" Margin="0" Style="{StaticResource ContentCard}"
                     Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Routines}">

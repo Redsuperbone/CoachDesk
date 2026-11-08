@@ -51,16 +51,16 @@
                       Style="{StaticResource AnthropometryDataGrid}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Medición" Binding="{Binding Name}" IsReadOnly="True" Width="190" />
-                    <DataGridTextColumn Header="Mes 1" Binding="{Binding Month1, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 2" Binding="{Binding Month2, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 3" Binding="{Binding Month3, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 4" Binding="{Binding Month4, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 5" Binding="{Binding Month5, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 6" Binding="{Binding Month6, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 7" Binding="{Binding Month7, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 8" Binding="{Binding Month8, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 9" Binding="{Binding Month9, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
-                    <DataGridTextColumn Header="Mes 10" Binding="{Binding Month10, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="90" />
+                    <DataGridTextColumn Header="Mes 1" Binding="{Binding Month1, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 2" Binding="{Binding Month2, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 3" Binding="{Binding Month3, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 4" Binding="{Binding Month4, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 5" Binding="{Binding Month5, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 6" Binding="{Binding Month6, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 7" Binding="{Binding Month7, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 8" Binding="{Binding Month8, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 9" Binding="{Binding Month9, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Mes 10" Binding="{Binding Month10, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
                     <DataGridTextColumn Header="Unidad" Binding="{Binding Unit}" IsReadOnly="True" Width="70" />
                 </DataGrid.Columns>
             </DataGrid>
