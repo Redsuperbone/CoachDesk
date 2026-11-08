@@ -5,6 +5,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -36,7 +37,31 @@
             </Border>
         </StackPanel>
 
-        <Grid Grid.Row="2">
+        <Border Grid.Row="2" Margin="0,0,0,14" Padding="14" Style="{StaticResource InnerPanel}">
+            <Grid DataContext="{Binding Photos}">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Grid>
+                    <TextBlock Text="Fotografías de control" Style="{StaticResource CardTitleText}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="EVIDENCIA:" VerticalAlignment="Center" Margin="0,0,8,0" Style="{StaticResource FieldLabelText}"/>
+                        <ComboBox ItemsSource="{Binding Months}" SelectedItem="{Binding SelectedMonth}" Width="112" ToolTip="Selecciona el mes para ver o cargar las fotografías correspondientes"/>
+                    </StackPanel>
+                </Grid>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,12,0,0">
+                    <TextBlock Text="{Binding SelectedMonthLabel}" FontWeight="Bold" Foreground="{StaticResource BrandAccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <Button Content="＋ Frontal" Command="{Binding UploadCommand}" CommandParameter="Frontal" Style="{StaticResource QuickActionButton}" />
+                    <Button Content="＋ Perfil" Command="{Binding UploadCommand}" CommandParameter="Perfil" Style="{StaticResource QuickActionButton}" />
+                    <Button Content="＋ Espalda" Command="{Binding UploadCommand}" CommandParameter="Espalda" Style="{StaticResource QuickActionButton}" />
+                    <ItemsControl ItemsSource="{Binding Photos}" Margin="14,0,0,0">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><Border Background="#111C30" BorderBrush="#3A5473" BorderThickness="1" CornerRadius="5" Padding="8" Margin="0,0,7,0"><StackPanel><TextBlock Text="{Binding Type}" FontWeight="Bold" Foreground="{StaticResource BrandAccentBrush}"/><TextBlock Text="{Binding FileName}" MaxWidth="120" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/></StackPanel></Border></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <TextBlock Grid.Row="1" Text="{Binding Message}" Margin="0,47,0,0" Foreground="#FFB4BA" FontSize="11" Visibility="{Binding HasMessage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="3">
             <DataGrid ItemsSource="{Binding Rows}"
                       AutoGenerateColumns="False"
                       CanUserAddRows="False"
@@ -72,7 +97,7 @@
             </Border>
         </Grid>
 
-        <Grid Grid.Row="3" Margin="0,18,0,0">
+        <Grid Grid.Row="4" Margin="0,18,0,0">
             <TextBlock Text="Rangos biológicos validados: peso 25–350 kg, estatura 100–250 cm; pliegues y perímetros según la fila."
                        VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
             <Button Content="Guardar expediente"

@@ -4,7 +4,7 @@ namespace CoachDesk.Desktop.ViewModels;
 
 public sealed class AppointmentRowViewModel(AppointmentDto appointment) : ViewModelBase
 {
-    public Guid Id { get; } = appointment.Id;
+    public int Id { get; } = appointment.Id;
     public DateTimeOffset StartsAt { get; } = appointment.StartsAt;
     public int DurationMinutes { get; } = appointment.DurationMinutes;
     public string Date => StartsAt.LocalDateTime.ToString("dddd dd MMM, yyyy");

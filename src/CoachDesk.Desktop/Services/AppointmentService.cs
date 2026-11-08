@@ -19,11 +19,11 @@ public sealed class AppointmentService : IAppointmentService
     public Task<AppointmentDto> PublishAsync(CreateAvailabilityRequestDto request, CancellationToken cancellationToken = default) =>
         _apiService.PostAsync<CreateAvailabilityRequestDto, AppointmentDto>("coach/appointments", request, cancellationToken);
 
-    public async Task CancelAsync(Guid appointmentId, CancellationToken cancellationToken = default)
+    public async Task CancelAsync(int appointmentId, CancellationToken cancellationToken = default)
     {
         await _apiService.PostAsync<object, object>($"coach/appointments/{appointmentId}/cancel", new { }, cancellationToken);
     }
 
-    public Task DeleteAsync(Guid appointmentId, CancellationToken cancellationToken = default) =>
+    public Task DeleteAsync(int appointmentId, CancellationToken cancellationToken = default) =>
         _apiService.DeleteAsync($"coach/appointments/{appointmentId}", cancellationToken);
 }

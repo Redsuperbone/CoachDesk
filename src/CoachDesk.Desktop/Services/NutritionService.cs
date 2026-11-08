@@ -11,7 +11,7 @@ public sealed class NutritionService : INutritionService
         _apiService = apiService;
     }
 
-    public Task<MealPlanDto> GetCurrentPlanAsync(Guid adviseeId, CancellationToken cancellationToken = default) =>
+    public Task<MealPlanDto> GetCurrentPlanAsync(int adviseeId, CancellationToken cancellationToken = default) =>
         _apiService.GetAsync<MealPlanDto>($"coach/advisees/{adviseeId}/nutrition-plan", cancellationToken);
 
     public Task SavePlanAsync(MealPlanDto plan, CancellationToken cancellationToken = default) =>

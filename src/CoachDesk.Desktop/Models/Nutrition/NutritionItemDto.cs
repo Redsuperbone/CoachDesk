@@ -2,7 +2,7 @@ namespace CoachDesk.Desktop.Models.Nutrition;
 
 public sealed class NutritionItemDto
 {
-    public Guid Id { get; init; }
+    public int Id { get; init; }
     public string FoodName { get; init; } = string.Empty;
     public string Portion { get; init; } = string.Empty;
     public decimal Calories { get; init; }

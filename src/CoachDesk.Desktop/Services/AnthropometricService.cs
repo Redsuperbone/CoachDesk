@@ -11,7 +11,7 @@ public sealed class AnthropometricService : IAnthropometricService
         _apiService = apiService;
     }
 
-    public Task<AnthropometricProfileDto> GetProfileAsync(Guid adviseeId, CancellationToken cancellationToken = default) =>
+    public Task<AnthropometricProfileDto> GetProfileAsync(int adviseeId, CancellationToken cancellationToken = default) =>
         _apiService.GetAsync<AnthropometricProfileDto>(
             $"coach/advisees/{adviseeId}/anthropometry",
             cancellationToken);

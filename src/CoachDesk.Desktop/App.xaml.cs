@@ -25,8 +25,10 @@ public partial class App : Application
         var authenticationService = new AuthenticationService(apiService, session);
         var adviseeService = new AdviseeService(apiService);
         var anthropometricService = new AnthropometricService(apiService);
+        var photoEvidenceService = new PhotoEvidenceService(apiService);
         var nutritionService = new NutritionService(apiService);
         var appointmentService = new AppointmentService(apiService);
+        var confirmationDialogService = new ConfirmationDialogService();
         var pdfExporter = new MealPlanPdfExporter();
         var fileDialogService = new FileDialogService();
 
@@ -39,8 +41,10 @@ public partial class App : Application
                     session,
                     adviseeService,
                     anthropometricService,
+                    photoEvidenceService,
                     nutritionService,
                     appointmentService,
+                    confirmationDialogService,
                     pdfExporter,
                     fileDialogService);
                 var mainWindow = new MainWindow(mainViewModel);

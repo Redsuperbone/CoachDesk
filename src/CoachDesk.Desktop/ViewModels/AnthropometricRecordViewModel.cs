@@ -16,14 +16,16 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
     private string? _errorMessage;
     private string? _successMessage;
 
-    public AnthropometricRecordViewModel(IAnthropometricService anthropometricService)
+    public AnthropometricRecordViewModel(IAnthropometricService anthropometricService, IPhotoEvidenceService photoEvidenceService)
     {
         _anthropometricService = anthropometricService ?? throw new ArgumentNullException(nameof(anthropometricService));
         Rows = new ObservableCollection<AnthropometricMetricRowViewModel>(CreateRows());
+        Photos = new PhotoEvidenceViewModel(photoEvidenceService);
         SaveCommand = new AsyncRelayCommand(_ => SaveAsync(), _ => CanSave);
     }
 
     public ObservableCollection<AnthropometricMetricRowViewModel> Rows { get; }
+    public PhotoEvidenceViewModel Photos { get; }
     public AdviseeSummaryDto? Advisee { get => _advisee; private set => SetProperty(ref _advisee, value); }
     public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
@@ -45,6 +47,7 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
         try
         {
             var profile = await _anthropometricService.GetProfileAsync(advisee.Id);
+            await Photos.LoadForAsync(advisee.Id);
             ClearRows();
             foreach (var assessment in profile.Assessments.Where(item => item.MonthNumber is >= 1 and <= 10))
             {

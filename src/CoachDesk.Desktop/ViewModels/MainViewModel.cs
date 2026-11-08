@@ -1,3 +1,4 @@
+using System.Net.Http;
 using CoachDesk.Desktop.Services;
 using CoachDesk.Desktop.Models.Advisees;
 using CoachDesk.Desktop.Commands;
@@ -8,26 +9,38 @@ public sealed class MainViewModel : ViewModelBase
 {
     private string _title = "Panel del Coach";
     private MainPage _currentPage = MainPage.Dashboard;
+    private string? _managementMessage;
+    private readonly IAdviseeService _adviseeService;
+    private readonly IConfirmationDialogService _confirmationDialogService;
 
     public MainViewModel(
         IAuthenticationSession session,
         IAdviseeService adviseeService,
         IAnthropometricService anthropometricService,
+        IPhotoEvidenceService photoEvidenceService,
         INutritionService nutritionService,
         IAppointmentService appointmentService,
+        IConfirmationDialogService confirmationDialogService,
         IMealPlanPdfExporter pdfExporter,
         IFileDialogService fileDialogService)
     {
+        _adviseeService = adviseeService;
+        _confirmationDialogService = confirmationDialogService;
         CoachName = session.CurrentCoach?.FullName ?? "Coach";
         AdviseeSelector = new AdviseeSelectorViewModel(adviseeService);
-        AnthropometricRecord = new AnthropometricRecordViewModel(anthropometricService);
+        AnthropometricRecord = new AnthropometricRecordViewModel(anthropometricService, photoEvidenceService);
         DietPlan = new DietPlanViewModel(nutritionService, pdfExporter, fileDialogService);
         AppointmentManager = new AppointmentsViewModel(appointmentService);
+        RoutineBuilder = new RoutineBuilderViewModel(adviseeService);
+        NewAdvisee = new AdviseeRegistrationViewModel(adviseeService, OnAdviseeCreatedAsync);
         OpenAnthropometricCommand = new AsyncRelayCommand(_ => OpenAnthropometricAsync(), _ => SelectedAdvisee is not null);
         OpenNutritionCommand = new AsyncRelayCommand(_ => OpenNutritionAsync(), _ => SelectedAdvisee is not null);
         BackToDashboardCommand = new RelayCommand(_ => CurrentPage = MainPage.Dashboard);
         OpenAppointmentsCommand = new AsyncRelayCommand(_ => OpenAppointmentsAsync());
-        OpenRoutinesCommand = new RelayCommand(_ => CurrentPage = MainPage.Routines);
+        OpenRoutinesCommand = new AsyncRelayCommand(_ => OpenRoutinesAsync());
+        OpenRegistrationCommand = new RelayCommand(_ => CurrentPage = MainPage.Registration);
+        PauseServiceCommand = new AsyncRelayCommand(_ => PauseServiceAsync(), _ => SelectedAdvisee is not null);
+        DeleteAdviseeCommand = new AsyncRelayCommand(_ => DeleteAdviseeAsync(), _ => SelectedAdvisee is not null);
         AdviseeSelector.PropertyChanged += (_, eventArgs) =>
         {
             if (eventArgs.PropertyName == nameof(AdviseeSelectorViewModel.SelectedAdvisee))
@@ -36,6 +49,8 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(HasSelectedAdvisee));
                 OpenAnthropometricCommand.RaiseCanExecuteChanged();
                 OpenNutritionCommand.RaiseCanExecuteChanged();
+                PauseServiceCommand.RaiseCanExecuteChanged();
+                DeleteAdviseeCommand.RaiseCanExecuteChanged();
             }
         };
     }
@@ -58,6 +73,7 @@ public sealed class MainViewModel : ViewModelBase
                 Title = value switch
                 {
                     MainPage.Anthropometry => "Expediente antropométrico",
+                    MainPage.Registration => "Alta de asesorado",
                     MainPage.Nutrition => "Plan nutricional",
                     MainPage.Appointments => "Gestión de Citas y Horarios Disponibles",
                     MainPage.Routines => "Constructor y Planificador de Rutinas",
@@ -73,16 +89,32 @@ public sealed class MainViewModel : ViewModelBase
 
     public bool HasSelectedAdvisee => SelectedAdvisee is not null;
 
+    public string? ManagementMessage
+    {
+        get => _managementMessage;
+        private set
+        {
+            if (SetProperty(ref _managementMessage, value)) OnPropertyChanged(nameof(HasManagementMessage));
+        }
+    }
+
+    public bool HasManagementMessage => !string.IsNullOrWhiteSpace(ManagementMessage);
+
     public AnthropometricRecordViewModel AnthropometricRecord { get; }
     public DietPlanViewModel DietPlan { get; }
     public AppointmentsViewModel AppointmentManager { get; }
+    public AdviseeRegistrationViewModel NewAdvisee { get; }
+    public RoutineBuilderViewModel RoutineBuilder { get; }
 
     public AsyncRelayCommand OpenAnthropometricCommand { get; }
     public AsyncRelayCommand OpenNutritionCommand { get; }
 
     public RelayCommand BackToDashboardCommand { get; }
     public AsyncRelayCommand OpenAppointmentsCommand { get; }
-    public RelayCommand OpenRoutinesCommand { get; }
+    public AsyncRelayCommand OpenRoutinesCommand { get; }
+    public RelayCommand OpenRegistrationCommand { get; }
+    public AsyncRelayCommand PauseServiceCommand { get; }
+    public AsyncRelayCommand DeleteAdviseeCommand { get; }
 
     public Task InitializeAsync() => AdviseeSelector.LoadAsync();
 
@@ -113,4 +145,54 @@ public sealed class MainViewModel : ViewModelBase
         CurrentPage = MainPage.Appointments;
         await AppointmentManager.LoadAsync();
     }
+
+    private async Task OpenRoutinesAsync()
+    {
+        CurrentPage = MainPage.Routines;
+        await RoutineBuilder.LoadAsync();
+    }
+
+    private async Task PauseServiceAsync()
+    {
+        var advisee = SelectedAdvisee;
+        if (advisee is null || !_confirmationDialogService.Confirm($"¿Pausar el servicio de {advisee.FullName}? El expediente se conservará, pero dejará de aparecer entre los asesorados activos.", "Pausar servicio")) return;
+
+        await ManageAdviseeAsync(() => _adviseeService.PauseAsync(advisee.Id), $"El servicio de {advisee.FullName} fue pausado.");
+    }
+
+    private async Task DeleteAdviseeAsync()
+    {
+        var advisee = SelectedAdvisee;
+        if (advisee is null || !_confirmationDialogService.Confirm($"¿Dar de baja a {advisee.FullName}? El expediente se conservará por historial, pero dejará de estar activo en el sistema.", "Dar de baja")) return;
+
+        await ManageAdviseeAsync(() => _adviseeService.DeleteAsync(advisee.Id), $"El expediente de {advisee.FullName} fue dado de baja.");
+    }
+
+    private async Task ManageAdviseeAsync(Func<Task> operation, string successMessage)
+    {
+        ManagementMessage = null;
+        try
+        {
+            await operation();
+            await AdviseeSelector.LoadAsync();
+            ManagementMessage = successMessage;
+        }
+        catch (ApiException exception)
+        {
+            ManagementMessage = exception.Message;
+        }
+        catch (HttpRequestException)
+        {
+            ManagementMessage = "No fue posible actualizar el estado del expediente. Revisa la conexión con el servidor.";
+        }
+    }
+
+    private async Task OnAdviseeCreatedAsync(AdviseeSummaryDto advisee)
+    {
+        await AdviseeSelector.LoadAsync();
+        AdviseeSelector.SelectedAdvisee = AdviseeSelector.Advisees.FirstOrDefault(item => item.Id == advisee.Id);
+        CurrentPage = MainPage.Dashboard;
+        ManagementMessage = $"El expediente de {advisee.FullName} fue registrado correctamente.";
+    }
+
 }

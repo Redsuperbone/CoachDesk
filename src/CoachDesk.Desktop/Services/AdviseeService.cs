@@ -11,6 +11,15 @@ public sealed class AdviseeService : IAdviseeService
         _apiService = apiService;
     }
 
+    public Task<AdviseeSummaryDto> CreateAsync(CreateAdviseeRequestDto request, CancellationToken cancellationToken = default) =>
+        _apiService.PostAsync<CreateAdviseeRequestDto, AdviseeSummaryDto>("coach/advisees", request, cancellationToken);
+
+    public Task PauseAsync(int adviseeId, CancellationToken cancellationToken = default) =>
+        _apiService.PutAsync($"coach/advisees/{adviseeId}/service-status", new UpdateAdviseeServiceStatusRequestDto(false), cancellationToken);
+
+    public Task DeleteAsync(int adviseeId, CancellationToken cancellationToken = default) =>
+        _apiService.DeleteAsync($"coach/advisees/{adviseeId}", cancellationToken);
+
     public Task<IReadOnlyList<AdviseeSummaryDto>> GetActiveAsync(
         string? searchTerm = null,
         CancellationToken cancellationToken = default)

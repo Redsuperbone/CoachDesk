@@ -47,6 +47,21 @@ public sealed class ApiService : IApiService
         await EnsureSuccessAsync(response, cancellationToken);
     }
 
+    public async Task<TResponse> PostMultipartAsync<TResponse>(string relativeUri, IReadOnlyDictionary<string, string> fields, string fileFieldName, string fileName, string contentType, byte[] content, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, relativeUri);
+        AddAuthorization(request);
+        using var form = new MultipartFormDataContent();
+        foreach (var field in fields) form.Add(new StringContent(field.Value), field.Key);
+        var file = new ByteArrayContent(content);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(file, fileFieldName, fileName);
+        request.Content = form;
+        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<TResponse>(JsonOptions, cancellationToken) ?? throw new ApiException(response.StatusCode, "La API devolvió una respuesta vacía.");
+    }
+
     private async Task<TResponse> SendAsync<TResponse>(
         HttpMethod method,
         string relativeUri,

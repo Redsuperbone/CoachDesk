@@ -19,27 +19,23 @@ src/CoachDesk.Desktop/
 
 ## Backend REST, PostgreSQL y Supabase
 
-La solución contiene `src/CoachDesk.Api`, una API ASP.NET Core 8 que centraliza autenticación JWT, asesorados, expediente antropométrico, planes nutricionales y horarios publicados. La app WPF se conecta a `https://localhost:7001/api/` de forma predeterminada.
+La solución contiene `src/CoachDesk.Api`, una API ASP.NET Core 8 que media entre la aplicación WPF y Supabase. El inicio de sesión se valida con Supabase Auth; las consultas y operaciones se envían a PostgREST/RPC con el Bearer token recibido, por lo que las políticas RLS de Supabase continúan aplicándose. La app WPF se conecta a `https://localhost:7001/api/` de forma predeterminada.
 
-La base de datos se describe en la migración versionada de Entity Framework Core ubicada en `src/CoachDesk.Api/Data/Migrations`. Nunca subas contraseñas ni claves JWT reales al repositorio. Para desarrollo local, crea `src/CoachDesk.Api/appsettings.Development.json` (está ignorado por Git):
+El esquema de la base de datos es el archivo SQL administrado en Supabase. La API no ejecuta migraciones de Entity Framework, no crea tablas y no inserta datos al iniciar; solamente verifica la conectividad. Nunca subas contraseñas ni claves JWT reales al repositorio. Para desarrollo local, crea `src/CoachDesk.Api/appsettings.Development.json` (está ignorado por Git):
 
 ```json
 {
   "ConnectionStrings": {
     "CoachDesk": "Host=db.TU_PROJECT_REF.supabase.co;Port=5432;Database=postgres;Username=postgres;Password=TU_CONTRASENA;SSL Mode=Require;Trust Server Certificate=true"
   },
-  "Jwt": {
-    "Key": "una-clave-secreta-larga-de-al-menos-32-caracteres"
-  },
-  "Seed": {
-    "CoachFullName": "Tu nombre",
-    "CoachEmail": "coach@manriquezgym.com",
-    "CoachPassword": "Una-contrasena-inicial-segura"
+  "Supabase": {
+    "Url": "https://TU_PROJECT_REF.supabase.co",
+    "PublishableKey": "TU_PUBLISHABLE_KEY"
   }
 }
 ```
 
-Al iniciar la API se aplican las migraciones pendientes y, solo si no existe ya ese correo, se crea el primer Coach con la configuración `Seed`. En la nube utiliza las variables de entorno equivalentes (`ConnectionStrings__CoachDesk`, `Jwt__Key`, `Seed__CoachEmail`, `Seed__CoachPassword`) en vez del archivo local.
+El acceso de usuarios se administra con Supabase Auth y los perfiles/roles existentes en el esquema importado. En la nube utiliza las variables de entorno equivalentes (`ConnectionStrings__CoachDesk`, `Supabase__Url`, `Supabase__PublishableKey`) en vez del archivo local. La publishable key puede estar en la configuración del backend, pero nunca expongas la contraseña de PostgreSQL ni una clave `service_role` al cliente WPF.
 
 Para iniciar el backend:
 
@@ -53,13 +49,20 @@ Swagger estará disponible en `https://localhost:7001/swagger` durante el desarr
 
 1. Copia `src/CoachDesk.Api/appsettings.Development.example.json` como `src/CoachDesk.Api/appsettings.Development.json`.
 2. En el panel de Supabase abre **Connect**, copia la cadena de conexión PostgreSQL y colócala en `ConnectionStrings:CoachDesk`. Para una API persistente usa la conexión directa; si tu red requiere IPv4, usa el pooler en modo sesión.
-3. Sustituye `Jwt:Key`, `Seed:CoachEmail` y `Seed:CoachPassword` por valores seguros. No subas este archivo ni la contraseña de Supabase a Git.
-4. Inicia la API. Esta aplicará la migración PostgreSQL y generará, una sola vez, el Coach y los tres asesorados de demostración si `Seed:DemoData` está en `true`.
-5. Ejecuta la aplicación WPF e inicia sesión con el correo y la contraseña configurados en `Seed`.
+3. Agrega `Supabase:Url` y `Supabase:PublishableKey` desde **Project Settings > API**. No subas este archivo ni la contraseña de Supabase a Git.
+4. Inicia la API. Validará la conexión sin modificar el esquema ni insertar datos. Después, `POST /api/auth/login` valida el correo y contraseña mediante Supabase Auth.
+5. Ejecuta la aplicación WPF e inicia sesión con un usuario creado mediante Supabase Auth que tenga perfil de coach.
 
 El archivo `appsettings.Development.json` está ignorado por Git; úsalo solamente para desarrollo local.
 
 La interfaz no accede directamente a PostgreSQL ni a Supabase. Toda operación de datos pasa por servicios que consumen la API REST con `HttpClient`.
+
+### Seguridad de la integración
+
+- `DatabaseInitializer` solo ejecuta una comprobación de conexión; las migraciones automáticas, `EnsureCreated` y la inserción de datos demo están deshabilitados.
+- La conexión Npgsql se limita a la comprobación de conectividad. Los endpoints de coach usan el Data API de Supabase con el token del usuario, evitando el bypass involuntario de RLS de una conexión PostgreSQL privilegiada.
+- La baja de un cliente es lógica: cambia `clientes.estado` a `Baja`; no elimina el expediente.
+- La publicación, cancelación y eliminación de horarios usa las funciones RPC `publicar_horario`, `cancelar_cita` y `eliminar_horario` del esquema oficial.
 
 La capa REST incluye `ApiService`, manejo tipado de errores, una sesión de autenticación en memoria, y servicios para login y consulta de asesorados activos. Los endpoints iniciales son `auth/login` y `coach/advisees?active=true`; ajústalos si el contrato final del backend usa rutas distintas.
 

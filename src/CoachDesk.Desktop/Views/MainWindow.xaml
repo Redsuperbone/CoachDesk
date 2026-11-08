@@ -19,6 +19,7 @@
                     <Button Content="◉  Gestión de Citas" Command="{Binding OpenAppointmentsCommand}" Style="{StaticResource NavButton}" />
                     <Button Content="⚑  Constructor Rutinas" Command="{Binding OpenRoutinesCommand}" Style="{StaticResource NavButton}" />
                     <Button Content="◉  Editor de Dietas" Command="{Binding OpenNutritionCommand}" Style="{StaticResource NavButton}" />
+                    <Button Content="＋  Alta de asesorado" Command="{Binding OpenRegistrationCommand}" Style="{StaticResource NavButton}" Margin="-12,22, -12,2" />
                 </StackPanel>
                 <Button Grid.Row="2" Content="▮  Cerrar sesión" Style="{StaticResource NavButton}" />
             </Grid>
@@ -79,6 +80,16 @@
                                 <Button Content="Registrar medición" Command="{Binding OpenAnthropometricCommand}" Style="{StaticResource QuickActionButton}" />
                                 <Button Content="Crear dieta" Command="{Binding OpenNutritionCommand}" Style="{StaticResource QuickActionButton}" />
                             </WrapPanel>
+                            <Separator Margin="0,16,0,16" Background="#E2E8E4" />
+                            <TextBlock Text="Gestión del servicio" Style="{StaticResource CardTitleText}" />
+                            <TextBlock Text="Pausa temporalmente el servicio o marca el expediente como baja, conservando su historial." Margin="0,4,0,12" Style="{StaticResource CardSubtitleText}" TextWrapping="Wrap" />
+                            <WrapPanel>
+                                <Button Content="Pausar servicio" Command="{Binding PauseServiceCommand}" Style="{StaticResource QuickActionButton}" />
+                                <Button Content="Dar de baja definitiva" Command="{Binding DeleteAdviseeCommand}" Style="{StaticResource DangerButton}" />
+                            </WrapPanel>
+                            <Border Background="#E4F3EA" CornerRadius="5" Padding="10" Margin="0,8,0,0" Visibility="{Binding HasManagementMessage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="{Binding ManagementMessage}" Foreground="#1D6A3A" TextWrapping="Wrap" />
+                            </Border>
                         </StackPanel>
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding HasSelectedAdvisee, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                             <TextBlock Text="Selecciona un asesorado" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
@@ -87,6 +98,49 @@
                     </Grid>
                 </Border>
             </Grid>
+            <Border Grid.Row="1" Margin="0" Style="{StaticResource ContentCard}"
+                    Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Registration}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel DataContext="{Binding NewAdvisee}" MaxWidth="760" HorizontalAlignment="Left">
+                        <TextBlock Text="Registrar nuevo asesorado" Style="{StaticResource CardTitleText}" />
+                        <TextBlock Text="Crea el expediente administrativo. La cuenta móvil se vincula posteriormente desde Supabase Auth." Margin="0,6,0,24" Style="{StaticResource CardSubtitleText}" TextWrapping="Wrap" />
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="NOMBRE *" Style="{StaticResource FieldLabelText}" />
+                                <TextBox Margin="0,6,0,17" Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBox}" />
+                                <TextBlock Text="SEXO" Style="{StaticResource FieldLabelText}" />
+                                <ComboBox Margin="0,6,0,17" SelectedValue="{Binding Sex}" SelectedValuePath="Content">
+                                    <ComboBoxItem Content="H" />
+                                    <ComboBoxItem Content="M" />
+                                </ComboBox>
+                                <TextBlock Text="TELÉFONO" Style="{StaticResource FieldLabelText}" />
+                                <TextBox Margin="0,6,0,17" Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBox}" />
+                                <TextBlock Text="OCUPACIÓN" Style="{StaticResource FieldLabelText}" />
+                                <TextBox Margin="0,6,0,17" Text="{Binding Occupation, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBox}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="APELLIDOS *" Style="{StaticResource FieldLabelText}" />
+                                <TextBox Margin="0,6,0,17" Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBox}" />
+                                <TextBlock Text="FECHA DE NACIMIENTO" Style="{StaticResource FieldLabelText}" />
+                                <DatePicker Margin="0,6,0,17" SelectedDate="{Binding BirthDate}" />
+                                <TextBlock Text="INICIO DE ASESORÍA" Style="{StaticResource FieldLabelText}" />
+                                <DatePicker Margin="0,6,0,17" SelectedDate="{Binding CoachingStartDate}" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="OBJETIVO" Style="{StaticResource FieldLabelText}" />
+                        <TextBox Margin="0,6,0,20" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Text="{Binding Goal, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBox}" />
+                        <Border Background="#5D2632" CornerRadius="5" Padding="11" Margin="0,0,0,14" Visibility="{Binding HasMessage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock Text="{Binding Message}" Foreground="#FFD9DC" TextWrapping="Wrap" />
+                        </Border>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Guardar expediente" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" />
+                            <Button Content="Limpiar" Command="{Binding ClearCommand}" Margin="10,0,0,0" Style="{StaticResource QuickActionButton}" />
+                            <ProgressBar Width="90" Height="5" Margin="18,18,0,0" IsIndeterminate="True" Visibility="{Binding IsSaving, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
             <Border Grid.Row="1" Margin="0" Style="{StaticResource ContentCard}"
                     Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Anthropometry}">
                 <views:AnthropometricRecordView DataContext="{Binding AnthropometricRecord}" />
@@ -101,7 +155,7 @@
             </Border>
             <Border Grid.Row="1" Margin="0" Style="{StaticResource ContentCard}"
                     Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Routines}">
-                <views:RoutineBuilderView />
+                <views:RoutineBuilderView DataContext="{Binding RoutineBuilder}" />
             </Border>
             </Grid>
         </Grid>
