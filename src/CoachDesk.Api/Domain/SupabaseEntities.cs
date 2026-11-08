@@ -40,7 +40,6 @@ public sealed class Measurement
 {
     public int MeasurementId { get; set; }
     public int ClientNumber { get; set; }
-    public short Period { get; set; }
     public short Month { get; set; }
     public DateOnly MeasurementDate { get; set; }
     public decimal? Weight { get; set; }

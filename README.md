@@ -64,10 +64,6 @@ La interfaz no accede directamente a PostgreSQL ni a Supabase. Toda operación d
 - La baja de un cliente es lógica: cambia `clientes.estado` a `Baja`; no elimina el expediente.
 - La publicación, cancelación y eliminación de horarios usa las funciones RPC `publicar_horario`, `cancelar_cita` y `eliminar_horario` del esquema oficial.
 
-### Ciclos de asesoría
-
-Las mediciones y fotografías se conservan por ciclo. Cuando se completen los meses 1–10 de un ciclo, Coach Desk permite abrir el siguiente sin eliminar el historial anterior. Antes de iniciar la API con esta funcionalidad, ejecuta una sola vez el script aditivo [20261108_add_assessment_cycles.sql](database/20261108_add_assessment_cycles.sql) en **Supabase > SQL Editor**. Este asigna todos los datos existentes al ciclo 1 y amplía las restricciones únicas; no elimina registros.
-
 La capa REST incluye `ApiService`, manejo tipado de errores, una sesión de autenticación en memoria, y servicios para login y consulta de asesorados activos. Los endpoints iniciales son `auth/login` y `coach/advisees?active=true`; ajústalos si el contrato final del backend usa rutas distintas.
 
 ## Guía visual

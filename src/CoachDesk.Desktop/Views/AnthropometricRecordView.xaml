@@ -19,11 +19,6 @@
                 <TextBlock Text="{Binding Advisee.FullName}" Style="{StaticResource SelectedAdviseeNameText}" />
                 <TextBlock Text="Captura y compara las mediciones del mes 1 al mes 10."
                            Style="{StaticResource CardSubtitleText}" />
-                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                    <TextBlock Text="CICLO DE ASESORÍA" Style="{StaticResource FieldLabelText}" VerticalAlignment="Center" />
-                    <ComboBox ItemsSource="{Binding Periods}" SelectedItem="{Binding SelectedPeriod}" Width="92" Margin="12,0,0,0" ToolTip="Selecciona el ciclo que deseas consultar o editar" />
-                    <Button Content="+ Nuevo ciclo" Command="{Binding NewPeriodCommand}" Margin="10,0,0,0" Style="{StaticResource QuickActionButton}" />
-                </StackPanel>
             </StackPanel>
             <Button Grid.Column="1"
                     Content="Volver"

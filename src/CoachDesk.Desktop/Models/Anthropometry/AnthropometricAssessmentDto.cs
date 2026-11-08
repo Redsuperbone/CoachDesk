@@ -2,7 +2,6 @@ namespace CoachDesk.Desktop.Models.Anthropometry;
 
 public sealed class AnthropometricAssessmentDto
 {
-    public int Period { get; init; } = 1;
     public int MonthNumber { get; init; }
     public DateOnly? RecordedOn { get; init; }
     public decimal? WeightKg { get; init; }

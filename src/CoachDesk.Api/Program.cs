@@ -86,39 +86,39 @@ coachApi.MapDelete("/advisees/{id:int}", async (int id, HttpRequest request, Cla
 coachApi.MapGet("/advisees/{id:int}/anthropometry", async (int id, HttpRequest request, ClaimsPrincipal principal, SupabaseClient supabase, CancellationToken ct) =>
 {
     var token = Token(request); if (await GetCoachAsync(UserId(principal), token, supabase, ct) is null) return Results.Forbid();
-    var rows = await supabase.GetRowsAsync($"mediciones?numero_cliente=eq.{id}&select=periodo,mes,fecha_medicion,peso,estatura,pliegue_bicipital,pliegue_tricipital,pliegue_escapular,pliegue_cresta_iliaca,cintura,cadera,biceps,pierna&order=periodo.asc,mes.asc", token, ct);
+    var rows = await supabase.GetRowsAsync($"mediciones?numero_cliente=eq.{id}&select=mes,fecha_medicion,peso,estatura,pliegue_bicipital,pliegue_tricipital,pliegue_escapular,pliegue_cresta_iliaca,cintura,cadera,biceps,pierna&order=mes.asc", token, ct);
     return Results.Ok(new AnthropometricProfileResponse(id, rows.OfType<JsonObject>().Select(ToAssessment).ToList()));
 });
 coachApi.MapPut("/advisees/{id:int}/anthropometry", async (int id, AnthropometricProfileRequest body, HttpRequest request, ClaimsPrincipal principal, SupabaseClient supabase, CancellationToken ct) =>
 {
     var token = Token(request); if (await GetCoachAsync(UserId(principal), token, supabase, ct) is null) return Results.Forbid();
-    if (body.Assessments.Any(item => item.MonthNumber is < 0 or > 10 || item.Period is < 1 or > 1000)) return Results.BadRequest(new { message = "El ciclo debe ser válido y el mes debe estar entre Inicio (0) y 10." });
+    if (body.Assessments.Any(item => item.MonthNumber is < 0 or > 10)) return Results.BadRequest(new { message = "El mes debe estar entre Inicio (0) y 10." });
     var rows = new JsonArray(body.Assessments.Select(item => Measurement(id, item)).ToArray());
-    if (rows.Count > 0) await supabase.PostRowsAsync("mediciones?on_conflict=numero_cliente,periodo,mes", rows, token, "resolution=merge-duplicates,return=minimal", ct);
+    if (rows.Count > 0) await supabase.PostRowsAsync("mediciones?on_conflict=numero_cliente,mes", rows, token, "resolution=merge-duplicates,return=minimal", ct);
     return Results.NoContent();
 });
 coachApi.MapGet("/advisees/{id:int}/photos", async (int id, HttpRequest request, ClaimsPrincipal principal, SupabaseClient supabase, CancellationToken ct) =>
 {
     var token = Token(request); if (await GetCoachAsync(UserId(principal), token, supabase, ct) is null) return Results.Forbid();
-    var rows = await supabase.GetRowsAsync($"fotos_control?numero_cliente=eq.{id}&select=foto_id,periodo,mes,tipo,ruta_archivo,tamano_bytes,fecha_subida&order=periodo.asc,mes.asc,tipo.asc", token, ct);
-    return Results.Ok(rows.OfType<JsonObject>().Select(row => new PhotoEvidenceResponse(Int(row, "foto_id"), Int(row, "periodo"), Int(row, "mes"), Text(row, "tipo") ?? string.Empty, Path.GetFileName(Text(row, "ruta_archivo") ?? string.Empty), row["tamano_bytes"]?.GetValue<long>() ?? 0, Timestamp(row, "fecha_subida") ?? DateTimeOffset.MinValue)).ToList());
+    var rows = await supabase.GetRowsAsync($"fotos_control?numero_cliente=eq.{id}&select=foto_id,mes,tipo,ruta_archivo,tamano_bytes,fecha_subida&order=mes.asc,tipo.asc", token, ct);
+    return Results.Ok(rows.OfType<JsonObject>().Select(row => new PhotoEvidenceResponse(Int(row, "foto_id"), Int(row, "mes"), Text(row, "tipo") ?? string.Empty, Path.GetFileName(Text(row, "ruta_archivo") ?? string.Empty), row["tamano_bytes"]?.GetValue<long>() ?? 0, Timestamp(row, "fecha_subida") ?? DateTimeOffset.MinValue)).ToList());
 });
-coachApi.MapPost("/advisees/{id:int}/photos", async (int id, int period, int month, string type, IFormFile file, HttpRequest request, ClaimsPrincipal principal, SupabaseClient supabase, CancellationToken ct) =>
+coachApi.MapPost("/advisees/{id:int}/photos", async (int id, int month, string type, IFormFile file, HttpRequest request, ClaimsPrincipal principal, SupabaseClient supabase, CancellationToken ct) =>
 {
     var token = Token(request); if (await GetCoachAsync(UserId(principal), token, supabase, ct) is null) return Results.Forbid();
-    if (period is < 1 or > 1000 || month is < 0 or > 10 || type is not ("Frontal" or "Perfil" or "Espalda")) return Results.BadRequest(new { message = "Ciclo, mes o tipo de fotografía inválido." });
+    if (month is < 0 or > 10 || type is not ("Frontal" or "Perfil" or "Espalda")) return Results.BadRequest(new { message = "Mes o tipo de fotografía inválido." });
     if (file.Length is <= 0 or > 1_572_864) return Results.BadRequest(new { message = "La fotografía debe pesar entre 1 byte y 1.5 MB." });
     var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
     if (!allowedTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase)) return Results.BadRequest(new { message = "Solo se admiten imágenes JPEG, PNG o WEBP." });
     var extension = file.ContentType.ToLowerInvariant() switch { "image/png" => "png", "image/webp" => "webp", _ => "jpg" };
-    var path = $"{id}/ciclo{period}/mes{month}_{type.ToLowerInvariant()}.{extension}";
+    var path = $"{id}/mes{month}_{type.ToLowerInvariant()}.{extension}";
     await using (var stream = file.OpenReadStream()) await supabase.UploadStorageObjectAsync("fotos-control", path, stream, file.ContentType, token, ct);
     // El esquema permite a staff insertar y borrar fotos, pero no actualizar filas existentes.
     // Al reemplazar, quitamos solo el metadato del mismo cliente/mes/tipo y registramos el nuevo.
-    await supabase.DeleteRowsAsync($"fotos_control?numero_cliente=eq.{id}&periodo=eq.{period}&mes=eq.{month}&tipo=eq.{Uri.EscapeDataString(type)}", token, ct);
-    var records = await supabase.PostRowsAsync("fotos_control", new JsonObject { ["numero_cliente"] = id, ["periodo"] = period, ["mes"] = month, ["tipo"] = type, ["ruta_archivo"] = path, ["tamano_bytes"] = file.Length }, token, "return=representation", ct);
+    await supabase.DeleteRowsAsync($"fotos_control?numero_cliente=eq.{id}&mes=eq.{month}&tipo=eq.{Uri.EscapeDataString(type)}", token, ct);
+    var records = await supabase.PostRowsAsync("fotos_control", new JsonObject { ["numero_cliente"] = id, ["mes"] = month, ["tipo"] = type, ["ruta_archivo"] = path, ["tamano_bytes"] = file.Length }, token, "return=representation", ct);
     if (records.FirstOrDefault() is not JsonObject row) throw new InvalidOperationException("Supabase no devolvió el registro de la fotografía.");
-    return Results.Ok(new PhotoEvidenceResponse(Int(row, "foto_id"), Int(row, "periodo"), Int(row, "mes"), Text(row, "tipo") ?? type, Path.GetFileName(Text(row, "ruta_archivo") ?? path), row["tamano_bytes"]?.GetValue<long>() ?? file.Length, Timestamp(row, "fecha_subida") ?? DateTimeOffset.UtcNow));
+    return Results.Ok(new PhotoEvidenceResponse(Int(row, "foto_id"), Int(row, "mes"), Text(row, "tipo") ?? type, Path.GetFileName(Text(row, "ruta_archivo") ?? path), row["tamano_bytes"]?.GetValue<long>() ?? file.Length, Timestamp(row, "fecha_subida") ?? DateTimeOffset.UtcNow));
 }).DisableAntiforgery();
 
 coachApi.MapGet("/appointments", async (DateOnly from, DateOnly to, HttpRequest request, ClaimsPrincipal principal, SupabaseClient supabase, CancellationToken ct) =>
@@ -159,8 +159,8 @@ static async Task<CoachIdentity?> GetCoachAsync(Guid userId, string token, Supab
     var coaches = await client.GetRowsAsync($"coaches?usuario_id=eq.{userId}&activo=eq.true&select=coach_id,nombre,apellidos", token, ct); var coach = coaches.FirstOrDefault() as JsonObject;
     return coach is null ? null : new CoachIdentity(Int(coach, "coach_id"), Name(coach), "coach");
 }
-static AnthropometricAssessmentRequest ToAssessment(JsonObject row) => new(Int(row, "periodo"), Int(row, "mes"), Date(row, "fecha_medicion"), Decimal(row, "peso"), Decimal(row, "estatura"), Decimal(row, "pliegue_bicipital"), Decimal(row, "pliegue_tricipital"), Decimal(row, "pliegue_escapular"), Decimal(row, "pliegue_cresta_iliaca"), Decimal(row, "cintura"), Decimal(row, "cadera"), Decimal(row, "biceps"), Decimal(row, "pierna"));
-static JsonObject Measurement(int client, AnthropometricAssessmentRequest value) => new() { ["numero_cliente"] = client, ["periodo"] = value.Period, ["mes"] = value.MonthNumber, ["fecha_medicion"] = value.RecordedOn?.ToString("yyyy-MM-dd"), ["peso"] = value.WeightKg, ["estatura"] = value.HeightCm, ["pliegue_bicipital"] = value.BicipitalSkinfoldMm, ["pliegue_tricipital"] = value.TricipitalSkinfoldMm, ["pliegue_escapular"] = value.SubscapularSkinfoldMm, ["pliegue_cresta_iliaca"] = value.SuprailiacSkinfoldMm, ["cintura"] = value.WaistCm, ["cadera"] = value.HipCm, ["biceps"] = value.ArmCm, ["pierna"] = value.ThighCm };
+static AnthropometricAssessmentRequest ToAssessment(JsonObject row) => new(Int(row, "mes"), Date(row, "fecha_medicion"), Decimal(row, "peso"), Decimal(row, "estatura"), Decimal(row, "pliegue_bicipital"), Decimal(row, "pliegue_tricipital"), Decimal(row, "pliegue_escapular"), Decimal(row, "pliegue_cresta_iliaca"), Decimal(row, "cintura"), Decimal(row, "cadera"), Decimal(row, "biceps"), Decimal(row, "pierna"));
+static JsonObject Measurement(int client, AnthropometricAssessmentRequest value) => new() { ["numero_cliente"] = client, ["mes"] = value.MonthNumber, ["fecha_medicion"] = value.RecordedOn?.ToString("yyyy-MM-dd"), ["peso"] = value.WeightKg, ["estatura"] = value.HeightCm, ["pliegue_bicipital"] = value.BicipitalSkinfoldMm, ["pliegue_tricipital"] = value.TricipitalSkinfoldMm, ["pliegue_escapular"] = value.SubscapularSkinfoldMm, ["pliegue_cresta_iliaca"] = value.SuprailiacSkinfoldMm, ["cintura"] = value.WaistCm, ["cadera"] = value.HipCm, ["biceps"] = value.ArmCm, ["pierna"] = value.ThighCm };
 static AppointmentResponse ToAppointment(JsonObject row) { var date = Text(row, "fecha") ?? throw new InvalidOperationException(); var start = DateTime.ParseExact(date + " " + Text(row, "hora_inicio"), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture); var end = DateTime.ParseExact(date + " " + Text(row, "hora_fin"), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture); var status = Text(row, "estado") switch { "Reservada" => AppointmentStatus.Booked, "Cancelada" => AppointmentStatus.Cancelled, _ => AppointmentStatus.Available }; return new AppointmentResponse(Int(row, "cita_id"), new DateTimeOffset(start, TimeSpan.Zero), Math.Max(1, (int)(end - start).TotalMinutes), Text(row, "detalle") ?? string.Empty, Text(row, "asesorado"), status); }
 static int Int(JsonObject row, string property) => row[property]?.GetValue<int>() ?? 0;
 static decimal? Decimal(JsonObject row, string property) => row[property]?.GetValue<decimal?>();

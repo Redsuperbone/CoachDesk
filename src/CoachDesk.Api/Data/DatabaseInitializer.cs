@@ -17,8 +17,6 @@ public static class DatabaseInitializer
         try
         {
             await database.Database.OpenConnectionAsync();
-            // Verifica que el script de ciclos ya se aplicó sin modificar datos.
-            await database.Measurements.AsNoTracking().OrderBy(item => item.MeasurementId).Select(item => item.Period).Take(1).ToListAsync();
             await database.Database.CloseConnectionAsync();
         }
         catch (Exception exception)
@@ -27,6 +25,6 @@ public static class DatabaseInitializer
             throw new InvalidOperationException("No fue posible conectarse a la base de datos configurada. Revisa el detalle registrado por la API.", exception);
         }
 
-        logger.LogInformation("Conexión y esquema de ciclos de PostgreSQL/Supabase verificados. Las migraciones y datos semilla están deshabilitados.");
+        logger.LogInformation("Conexión a PostgreSQL/Supabase verificada. Las migraciones y datos semilla están deshabilitados.");
     }
 }
