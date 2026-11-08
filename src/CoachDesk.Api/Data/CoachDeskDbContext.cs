@@ -23,7 +23,22 @@ public sealed class CoachDeskDbContext(DbContextOptions<CoachDeskDbContext> opti
         builder.Entity<Meal>().HasOne(meal => meal.MealPlan).WithMany(plan => plan.Meals).HasForeignKey(meal => meal.MealPlanId).OnDelete(DeleteBehavior.Cascade);
         builder.Entity<NutritionItem>().HasOne(item => item.Meal).WithMany(meal => meal.Items).HasForeignKey(item => item.MealId).OnDelete(DeleteBehavior.Cascade);
         builder.Entity<Appointment>().HasOne(appointment => appointment.Advisee).WithMany().HasForeignKey(appointment => appointment.AdviseeId).OnDelete(DeleteBehavior.SetNull);
-        builder.Entity<AnthropometricAssessment>().Property(value => value.WeightKg).HasPrecision(6, 2);
-        builder.Entity<NutritionItem>().Property(value => value.Calories).HasPrecision(8, 2);
+        var assessment = builder.Entity<AnthropometricAssessment>();
+        assessment.Property(value => value.WeightKg).HasPrecision(6, 2);
+        assessment.Property(value => value.HeightCm).HasPrecision(6, 2);
+        assessment.Property(value => value.BicipitalSkinfoldMm).HasPrecision(6, 2);
+        assessment.Property(value => value.TricipitalSkinfoldMm).HasPrecision(6, 2);
+        assessment.Property(value => value.SubscapularSkinfoldMm).HasPrecision(6, 2);
+        assessment.Property(value => value.SuprailiacSkinfoldMm).HasPrecision(6, 2);
+        assessment.Property(value => value.WaistCm).HasPrecision(6, 2);
+        assessment.Property(value => value.HipCm).HasPrecision(6, 2);
+        assessment.Property(value => value.ArmCm).HasPrecision(6, 2);
+        assessment.Property(value => value.ThighCm).HasPrecision(6, 2);
+
+        var nutrition = builder.Entity<NutritionItem>();
+        nutrition.Property(value => value.Calories).HasPrecision(8, 2);
+        nutrition.Property(value => value.ProteinGrams).HasPrecision(6, 2);
+        nutrition.Property(value => value.CarbohydratesGrams).HasPrecision(6, 2);
+        nutrition.Property(value => value.FatGrams).HasPrecision(6, 2);
     }
 }

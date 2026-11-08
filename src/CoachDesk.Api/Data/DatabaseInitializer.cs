@@ -79,9 +79,10 @@ public static class DatabaseInitializer
                 new Meal { Type = MealType.Dinner, Items = [new NutritionItem { FoodName = "Pescado blanco con verduras", Portion = "1 plato", Calories = 430m, ProteinGrams = 42m, CarbohydratesGrams = 24m, FatGrams = 16m }] }
             ]
         });
+        var todayUtc = DateTime.UtcNow.Date;
         database.Appointments.AddRange(
-            new Appointment { CoachId = coach.Id, StartsAt = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(16), DurationMinutes = 60, Detail = "Toma de pliegues y perímetros" },
-            new Appointment { CoachId = coach.Id, StartsAt = DateTimeOffset.UtcNow.Date.AddDays(2).AddHours(18), DurationMinutes = 45, Detail = "Videollamada de rutina" });
+            new Appointment { CoachId = coach.Id, StartsAt = new DateTimeOffset(todayUtc.AddDays(1).AddHours(16), TimeSpan.Zero), DurationMinutes = 60, Detail = "Toma de pliegues y perímetros" },
+            new Appointment { CoachId = coach.Id, StartsAt = new DateTimeOffset(todayUtc.AddDays(2).AddHours(18), TimeSpan.Zero), DurationMinutes = 45, Detail = "Videollamada de rutina" });
         await database.SaveChangesAsync();
         logger.LogInformation("Se crearon los datos demo locales de Coach Desk.");
     }

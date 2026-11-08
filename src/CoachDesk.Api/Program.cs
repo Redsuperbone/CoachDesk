@@ -10,8 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("CoachDesk") ?? throw new InvalidOperationException("Connection string CoachDesk is required.");
-var mysqlServerVersion = builder.Configuration["MySql:ServerVersion"] ?? "8.0.36-mysql";
-builder.Services.AddDbContext<CoachDeskDbContext>(options => options.UseMySql(connectionString, ServerVersion.Parse(mysqlServerVersion)));
+builder.Services.AddDbContext<CoachDeskDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddEndpointsApiExplorer();
