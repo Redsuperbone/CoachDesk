@@ -3,6 +3,7 @@ namespace CoachDesk.Desktop.Services;
 public interface IApiService
 {
     Task<TResponse> GetAsync<TResponse>(string relativeUri, CancellationToken cancellationToken = default);
+    Task<byte[]> GetBytesAsync(string relativeUri, CancellationToken cancellationToken = default);
 
     Task<TResponse> PostAsync<TRequest, TResponse>(
         string relativeUri,

@@ -19,9 +19,11 @@
                     <Button Content="◉  Gestión de Citas" Command="{Binding OpenAppointmentsCommand}" Style="{StaticResource NavButton}" />
                     <Button Content="⚑  Constructor Rutinas" Command="{Binding OpenRoutinesCommand}" Style="{StaticResource NavButton}" />
                     <Button Content="◉  Editor de Dietas" Command="{Binding OpenNutritionCommand}" Style="{StaticResource NavButton}" />
-                    <Button Content="＋  Alta de asesorado" Command="{Binding OpenRegistrationCommand}" Style="{StaticResource NavButton}" Margin="-12,22, -12,2" />
                 </StackPanel>
-                <Button Grid.Row="2" Content="▮  Cerrar sesión" Style="{StaticResource NavButton}" />
+                <StackPanel Grid.Row="2">
+                    <Button Content="↻  Reactivar asesorados" Command="{Binding OpenInactiveAdviseesCommand}" Style="{StaticResource NavButton}" />
+                    <Button Content="▮  Cerrar sesión" Style="{StaticResource NavButton}" />
+                </StackPanel>
             </Grid>
         </Border>
         <Grid Grid.Column="1">
@@ -140,6 +142,15 @@
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
+            </Border>
+            <Border Grid.Row="1" Margin="0" Style="{StaticResource ContentCard}"
+                    Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=InactiveAdvisees}">
+                <Grid DataContext="{Binding InactiveAdvisees}">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <StackPanel><TextBlock Text="Asesorados suspendidos y dados de baja" Style="{StaticResource CardTitleText}"/><TextBlock Text="Selecciona un expediente para reactivar su servicio sin perder su historial." Margin="0,5,0,14" Style="{StaticResource CardSubtitleText}"/></StackPanel>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Advisees}" SelectedItem="{Binding SelectedAdvisee}" Style="{StaticResource AdviseeListBox}"><ListBox.ItemTemplate><DataTemplate><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="{Binding FullName}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="{Binding PhoneNumber}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/></StackPanel><Border Grid.Column="1" Background="#5D2632" CornerRadius="4" Padding="8,3" VerticalAlignment="Center"><TextBlock Text="{Binding Status}" Foreground="#FFD9DC" FontSize="11" FontWeight="Bold"/></Border></Grid></DataTemplate></ListBox.ItemTemplate></ListBox>
+                    <Grid Grid.Row="2" Margin="0,14,0,0"><TextBlock Text="{Binding Message}" Foreground="#FFB4BA" VerticalAlignment="Center" Visibility="{Binding HasMessage, Converter={StaticResource BooleanToVisibilityConverter}}"/><Button Content="Reactivar servicio" Command="{Binding ReactivateCommand}" HorizontalAlignment="Right" Style="{StaticResource PrimaryButton}"/></Grid>
+                </Grid>
             </Border>
             <Border Grid.Row="1" Margin="0" Style="{StaticResource ContentCard}"
                     Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Anthropometry}">

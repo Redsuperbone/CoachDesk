@@ -17,6 +17,9 @@ public sealed class AdviseeService : IAdviseeService
     public Task PauseAsync(int adviseeId, CancellationToken cancellationToken = default) =>
         _apiService.PutAsync($"coach/advisees/{adviseeId}/service-status", new UpdateAdviseeServiceStatusRequestDto(false), cancellationToken);
 
+    public Task ReactivateAsync(int adviseeId, CancellationToken cancellationToken = default) =>
+        _apiService.PutAsync($"coach/advisees/{adviseeId}/service-status", new UpdateAdviseeServiceStatusRequestDto(true), cancellationToken);
+
     public Task DeleteAsync(int adviseeId, CancellationToken cancellationToken = default) =>
         _apiService.DeleteAsync($"coach/advisees/{adviseeId}", cancellationToken);
 
@@ -30,6 +33,13 @@ public sealed class AdviseeService : IAdviseeService
             endpoint += $"&search={Uri.EscapeDataString(searchTerm.Trim())}";
         }
 
+        return _apiService.GetAsync<IReadOnlyList<AdviseeSummaryDto>>(endpoint, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<AdviseeSummaryDto>> GetInactiveAsync(string? searchTerm = null, CancellationToken cancellationToken = default)
+    {
+        var endpoint = "coach/advisees?active=false";
+        if (!string.IsNullOrWhiteSpace(searchTerm)) endpoint += $"&search={Uri.EscapeDataString(searchTerm.Trim())}";
         return _apiService.GetAsync<IReadOnlyList<AdviseeSummaryDto>>(endpoint, cancellationToken);
     }
 }

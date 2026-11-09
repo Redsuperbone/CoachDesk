@@ -28,6 +28,7 @@ public partial class App : Application
         var photoEvidenceService = new PhotoEvidenceService(apiService);
         var nutritionService = new NutritionService(apiService);
         var appointmentService = new AppointmentService(apiService);
+        var routineService = new RoutineService(apiService);
         var confirmationDialogService = new ConfirmationDialogService();
         var pdfExporter = new MealPlanPdfExporter();
         var fileDialogService = new FileDialogService();
@@ -44,6 +45,7 @@ public partial class App : Application
                     photoEvidenceService,
                     nutritionService,
                     appointmentService,
+                    routineService,
                     confirmationDialogService,
                     pdfExporter,
                     fileDialogService);

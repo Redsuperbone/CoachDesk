@@ -20,6 +20,7 @@ public sealed class MainViewModel : ViewModelBase
         IPhotoEvidenceService photoEvidenceService,
         INutritionService nutritionService,
         IAppointmentService appointmentService,
+        IRoutineService routineService,
         IConfirmationDialogService confirmationDialogService,
         IMealPlanPdfExporter pdfExporter,
         IFileDialogService fileDialogService)
@@ -31,14 +32,16 @@ public sealed class MainViewModel : ViewModelBase
         AnthropometricRecord = new AnthropometricRecordViewModel(anthropometricService, photoEvidenceService);
         DietPlan = new DietPlanViewModel(nutritionService, pdfExporter, fileDialogService);
         AppointmentManager = new AppointmentsViewModel(appointmentService);
-        RoutineBuilder = new RoutineBuilderViewModel(adviseeService);
+        RoutineBuilder = new RoutineBuilderViewModel(adviseeService, routineService);
         NewAdvisee = new AdviseeRegistrationViewModel(adviseeService, OnAdviseeCreatedAsync);
+        InactiveAdvisees = new InactiveAdviseesViewModel(adviseeService, confirmationDialogService);
         OpenAnthropometricCommand = new AsyncRelayCommand(_ => OpenAnthropometricAsync(), _ => SelectedAdvisee is not null);
         OpenNutritionCommand = new AsyncRelayCommand(_ => OpenNutritionAsync(), _ => SelectedAdvisee is not null);
         BackToDashboardCommand = new RelayCommand(_ => CurrentPage = MainPage.Dashboard);
         OpenAppointmentsCommand = new AsyncRelayCommand(_ => OpenAppointmentsAsync());
         OpenRoutinesCommand = new AsyncRelayCommand(_ => OpenRoutinesAsync());
         OpenRegistrationCommand = new RelayCommand(_ => CurrentPage = MainPage.Registration);
+        OpenInactiveAdviseesCommand = new AsyncRelayCommand(_ => OpenInactiveAdviseesAsync());
         PauseServiceCommand = new AsyncRelayCommand(_ => PauseServiceAsync(), _ => SelectedAdvisee is not null);
         DeleteAdviseeCommand = new AsyncRelayCommand(_ => DeleteAdviseeAsync(), _ => SelectedAdvisee is not null);
         AdviseeSelector.PropertyChanged += (_, eventArgs) =>
@@ -74,6 +77,7 @@ public sealed class MainViewModel : ViewModelBase
                 {
                     MainPage.Anthropometry => "Expediente antropométrico",
                     MainPage.Registration => "Alta de asesorado",
+                    MainPage.InactiveAdvisees => "Asesorados suspendidos y bajas",
                     MainPage.Nutrition => "Plan nutricional",
                     MainPage.Appointments => "Gestión de Citas y Horarios Disponibles",
                     MainPage.Routines => "Constructor y Planificador de Rutinas",
@@ -105,6 +109,7 @@ public sealed class MainViewModel : ViewModelBase
     public AppointmentsViewModel AppointmentManager { get; }
     public AdviseeRegistrationViewModel NewAdvisee { get; }
     public RoutineBuilderViewModel RoutineBuilder { get; }
+    public InactiveAdviseesViewModel InactiveAdvisees { get; }
 
     public AsyncRelayCommand OpenAnthropometricCommand { get; }
     public AsyncRelayCommand OpenNutritionCommand { get; }
@@ -113,6 +118,7 @@ public sealed class MainViewModel : ViewModelBase
     public AsyncRelayCommand OpenAppointmentsCommand { get; }
     public AsyncRelayCommand OpenRoutinesCommand { get; }
     public RelayCommand OpenRegistrationCommand { get; }
+    public AsyncRelayCommand OpenInactiveAdviseesCommand { get; }
     public AsyncRelayCommand PauseServiceCommand { get; }
     public AsyncRelayCommand DeleteAdviseeCommand { get; }
 
@@ -150,6 +156,12 @@ public sealed class MainViewModel : ViewModelBase
     {
         CurrentPage = MainPage.Routines;
         await RoutineBuilder.LoadAsync();
+    }
+
+    private async Task OpenInactiveAdviseesAsync()
+    {
+        CurrentPage = MainPage.InactiveAdvisees;
+        await InactiveAdvisees.LoadAsync();
     }
 
     private async Task PauseServiceAsync()

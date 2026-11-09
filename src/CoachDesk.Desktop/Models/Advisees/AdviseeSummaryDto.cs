@@ -8,6 +8,7 @@ public sealed class AdviseeSummaryDto
     public string? PhoneNumber { get; init; }
     public DateOnly? BirthDate { get; init; }
     public bool IsActive { get; init; }
+    public string Status { get; init; } = string.Empty;
     public DateTimeOffset? LastAssessmentAt { get; init; }
 
     public int? Age => BirthDate is null

@@ -26,6 +26,13 @@ public sealed class ApiService : IApiService
     public Task<TResponse> GetAsync<TResponse>(string relativeUri, CancellationToken cancellationToken = default) =>
         SendAsync<TResponse>(HttpMethod.Get, relativeUri, null, cancellationToken);
 
+    public async Task<byte[]> GetBytesAsync(string relativeUri, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendRequestAsync(HttpMethod.Get, relativeUri, null, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
+
     public Task<TResponse> PostAsync<TRequest, TResponse>(
         string relativeUri,
         TRequest request,

@@ -1,44 +1,124 @@
 <UserControl x:Class="CoachDesk.Desktop.Views.RoutineBuilderView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <Style x:Key="WeekDayPicker" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
+                <Grid>
+                    <ToggleButton x:Name="Toggle" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Cursor="Hand">
+                        <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
+                    </ToggleButton>
+                    <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Slide" MinWidth="{Binding ActualWidth, ElementName=Toggle}">
+                        <Border Background="{StaticResource InputBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Padding="2"><ScrollViewer MaxHeight="220"><ItemsPresenter/></ScrollViewer></Border>
+                    </Popup>
+                </Grid>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="RoutineListBox" TargetType="ListBox" BasedOn="{StaticResource AdviseeListBox}">
+            <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
+            <Setter Property="ItemContainerStyle"><Setter.Value>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="13,10" /><Setter Property="MinHeight" Value="62" /><Setter Property="Margin" Value="0,0,0,6" />
+                    <Setter Property="Background" Value="#162236" /><Setter Property="BorderBrush" Value="#2D4059" /><Setter Property="BorderThickness" Value="1" /><Setter Property="Cursor" Value="Hand" />
+                    <Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#263A53" /></Trigger><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="#1D5879" /><Setter Property="BorderBrush" Value="{StaticResource BrandAccentBrush}" /></Trigger></Style.Triggers>
+                </Style>
+            </Setter.Value></Setter>
+        </Style>
+        <Style x:Key="RoutineActionButton" TargetType="Button" BasedOn="{StaticResource QuickActionButton}">
+            <Setter Property="Height" Value="40" /><Setter Property="Padding" Value="15,0" /><Setter Property="Margin" Value="0" /><Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="RoutineDangerButton" TargetType="Button" BasedOn="{StaticResource DangerButton}">
+            <Setter Property="Height" Value="40" /><Setter Property="Padding" Value="15,0" /><Setter Property="Margin" Value="0" /><Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <Grid>
             <TextBlock Text="Constructor de Rutinas" Style="{StaticResource SelectedAdviseeNameText}"/>
-            <Button Content="Guardar y asignar" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="☰  Panel" Command="{Binding TogglePlanPanelCommand}" Style="{StaticResource RoutineActionButton}" />
+                <Button Content="+ Nueva rutina" Command="{Binding NewPlanCommand}" Style="{StaticResource RoutineActionButton}" Margin="2,0,0,0" />
+                <Button Content="Guardar y asignar" Command="{Binding SaveAndAssignCommand}" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0"/>
+            </StackPanel>
         </Grid>
+
         <Border Grid.Row="1" Margin="0,18,0,0" Style="{StaticResource InnerPanel}">
             <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="250"/></Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                        <TextBlock Text="NOMBRE DEL PLAN" Style="{StaticResource FieldLabelText}" VerticalAlignment="Center"/>
-                        <TextBox Text="Hipertrofia 4 días - Intermedio" Width="230" Margin="12,0,0,0" Style="{StaticResource InputTextBox}"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="ASIGNAR A ASESORADO ACTIVO" Style="{StaticResource FieldLabelText}"/>
-                        <ListBox ItemsSource="{Binding Advisees}" SelectedItem="{Binding SelectedAdvisee}" Height="92" Margin="0,7,0,0" Style="{StaticResource AdviseeListBox}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding PhoneNumber}" Margin="0,2,0,0" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        <TextBlock Text="{Binding Message}" Margin="0,5,0,0" Foreground="#FFB4BA" FontSize="11" TextWrapping="Wrap" Visibility="{Binding HasMessage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                        <ProgressBar Height="4" Margin="0,5,0,0" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="{Binding PlanPanelWidth}"/><ColumnDefinition Width="{Binding PlanPanelGapWidth}"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                <Border Background="#0E1729" BorderBrush="#33445B" BorderThickness="1" CornerRadius="5" Padding="14" Visibility="{Binding IsPlanPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="DATOS DEL PLAN" Foreground="{StaticResource BrandAccentBrush}" FontSize="15" FontWeight="Bold"/>
+                            <TextBlock Text="NOMBRE DEL PLAN" Style="{StaticResource FieldLabelText}" Margin="0,13,0,4"/>
+                            <TextBox Text="{Binding PlanName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBox}"/>
+                            <TextBlock Text="INICIA EL" Style="{StaticResource FieldLabelText}" Margin="0,12,0,4"/>
+                            <DatePicker SelectedDate="{Binding StartDate}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Margin="0,18,0,0">
+                            <TextBlock Text="ASIGNAR A ASESORADO ACTIVO" Style="{StaticResource FieldLabelText}"/>
+                            <ListBox ItemsSource="{Binding Advisees}" SelectedItem="{Binding SelectedAdvisee}" Height="112" Margin="0,6,0,0" Style="{StaticResource RoutineListBox}">
+                                <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding FullName}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="{Binding PhoneNumber}" Margin="0,2,0,0" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+                            </ListBox>
+                            <Button Content="Ver rutinas guardadas" Command="{Binding LoadPlansCommand}" Style="{StaticResource RoutineActionButton}" HorizontalAlignment="Left" Margin="0,8,0,0" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Margin="0,18,0,0">
+                            <TextBlock Text="RUTINAS DEL ASESORADO" Style="{StaticResource FieldLabelText}"/>
+                            <ListBox ItemsSource="{Binding SavedPlans}" SelectedItem="{Binding SelectedSavedPlan}" Height="128" Margin="0,6,0,0" Style="{StaticResource RoutineListBox}">
+                                <ListBox.ItemTemplate><DataTemplate><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding StartDate, StringFormat=Inicio: {0:dd/MM/yyyy}}" Margin="0,2,0,0" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/></StackPanel><Border Grid.Column="1" Background="#1D5879" CornerRadius="4" Padding="6,3" VerticalAlignment="Center" Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="ACTIVA" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/></Border></Grid></DataTemplate></ListBox.ItemTemplate>
+                            </ListBox>
+                            <Button Content="Cargar para editar" Command="{Binding EditSavedPlanCommand}" Style="{StaticResource RoutineActionButton}" HorizontalAlignment="Left" Margin="0,8,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="3" Margin="0,12,0,0" VerticalAlignment="Bottom">
+                            <TextBlock Text="{Binding Message}" Foreground="#FFB4BA" FontSize="11" TextWrapping="Wrap" Visibility="{Binding HasMessage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <ProgressBar Height="4" Margin="0,5,0,0" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="170"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,14,0"><TextBlock Text="DÍAS Y EJERCICIOS DEL PLAN" Foreground="{StaticResource BrandAccentBrush}" FontSize="15" FontWeight="Bold" TextWrapping="Wrap"/><TextBlock Text="Configura los días y ejercicios de cada sesión." Style="{StaticResource CardSubtitleText}" Margin="0,3,0,0" TextWrapping="Wrap"/></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock Text="DÍA DE LA SEMANA" Style="{StaticResource FieldLabelText}" Margin="0,0,0,4"/><ComboBox ItemsSource="{Binding WeekDays}" SelectedItem="{Binding DayToAdd}" Style="{StaticResource WeekDayPicker}" Margin="0,0,8,0"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimaryBrush}" /></DataTemplate></ComboBox.ItemTemplate></ComboBox></StackPanel>
+                        <Button Grid.Column="2" Content="+ Agregar día" Command="{Binding AddDayCommand}" Style="{StaticResource RoutineActionButton}" VerticalAlignment="Bottom" />
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="185"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Border Background="#0E1729" BorderBrush="#33445B" BorderThickness="1" CornerRadius="5" Padding="8">
+                            <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                <TextBlock Text="Días configurados" Style="{StaticResource FieldLabelText}" Margin="4,2,4,9"/>
+                                <ListBox Grid.Row="1" ItemsSource="{Binding Days}" SelectedItem="{Binding SelectedDay}" Style="{StaticResource AdviseeListBox}"><ListBox.ItemTemplate><DataTemplate><StackPanel Margin="2"><TextBlock Text="{Binding DayName}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/><TextBlock Text="{Binding Title}" Margin="0,2,0,0" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
+                                <Button Grid.Row="2" Content="Eliminar día" Command="{Binding RemoveDayCommand}" Style="{StaticResource RoutineDangerButton}" Margin="0,9,0,0" />
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Column="2" Visibility="{Binding HasSelectedDay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions><StackPanel Orientation="Horizontal" Grid.Column="0"><TextBlock Text="{Binding SelectedDay.DayName}" Foreground="{StaticResource BrandAccentBrush}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"/><TextBlock Text="TÍTULO" Style="{StaticResource FieldLabelText}" Margin="14,0,8,0" VerticalAlignment="Center"/><TextBox Text="{Binding SelectedDay.Title, UpdateSourceTrigger=PropertyChanged}" Width="150" Style="{StaticResource InputTextBox}"/></StackPanel><Button Grid.Column="1" Content="+ Agregar ejercicio" Command="{Binding AddExerciseCommand}" Style="{StaticResource RoutineActionButton}" HorizontalAlignment="Right"/></Grid>
+                            <TextBlock Grid.Row="1" Text="Series: 1–20 · Reps: 8-12 o 12 · Descanso: segundos (ej. 90 seg) · Carga: kg opcional." Margin="0,8,0,8" Style="{StaticResource CardSubtitleText}"/>
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding SelectedDayExercises}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" RowHeight="48" MinHeight="130" Style="{StaticResource FoodDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Ejercicio" Binding="{Binding ExerciseName, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                    <DataGridTextColumn Header="Series" Binding="{Binding Sets, UpdateSourceTrigger=PropertyChanged}" Width="62" />
+                                    <DataGridTextColumn Header="Reps" Binding="{Binding Repetitions, UpdateSourceTrigger=PropertyChanged}" Width="62" />
+                                    <DataGridTextColumn Header="Descanso" Binding="{Binding Rest, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                                    <DataGridTextColumn Header="Carga (kg)" Binding="{Binding SuggestedLoad, UpdateSourceTrigger=PropertyChanged}" Width="95" />
+                                    <DataGridTemplateColumn Width="46"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="×" Command="{Binding DataContext.RemoveExerciseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource RemoveButton}" /></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Grid>
+                    <StackPanel Grid.Row="2" Margin="0,12,0,0">
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="#FFB4BA" Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <TextBlock Text="{Binding SuccessMessage}" TextWrapping="Wrap" Foreground="#68D391" Visibility="{Binding HasSuccess, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     </StackPanel>
                 </Grid>
-                <Grid Grid.Row="1" Margin="0,20,0,8">
-                    <TextBlock Text="Martes: Espalda y Bíceps" Foreground="{StaticResource BrandAccentBrush}" FontSize="15" FontWeight="Bold"/>
-                    <Button Content="+ Agregar ejercicio" Style="{StaticResource QuickActionButton}" HorizontalAlignment="Right"/>
-                </Grid>
-                <Grid Grid.Row="2" Height="32" Background="#0E1729"><Grid.ColumnDefinitions><ColumnDefinition Width="2.2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="1.2*"/></Grid.ColumnDefinitions><TextBlock Text="Ejercicio" Style="{StaticResource TableHeaderText}"/><TextBlock Grid.Column="1" Text="Series" Style="{StaticResource TableHeaderText}"/><TextBlock Grid.Column="2" Text="Reps" Style="{StaticResource TableHeaderText}"/><TextBlock Grid.Column="3" Text="Descanso" Style="{StaticResource TableHeaderText}"/><TextBlock Grid.Column="4" Text="Carga sugerida" Style="{StaticResource TableHeaderText}"/></Grid>
-                <Grid Grid.Row="3" Height="48" Background="#1E2E43"><Grid.ColumnDefinitions><ColumnDefinition Width="2.2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="1.2*"/></Grid.ColumnDefinitions><TextBox Text="Jalón al pecho en polea" Margin="8" Style="{StaticResource InputTextBox}"/><TextBox Grid.Column="1" Text="4" Margin="8" Style="{StaticResource InputTextBox}"/><TextBox Grid.Column="2" Text="10-12" Margin="8" Style="{StaticResource InputTextBox}"/><TextBox Grid.Column="3" Text="90 seg" Margin="8" Style="{StaticResource InputTextBox}"/><TextBox Grid.Column="4" Text="50 kg" Margin="8" Style="{StaticResource InputTextBox}"/></Grid>
-                <Grid Grid.Row="4" Height="48" Background="#1A283B"><Grid.ColumnDefinitions><ColumnDefinition Width="2.2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="1.2*"/></Grid.ColumnDefinitions><TextBox Text="Remo con barra T" Margin="8" Style="{StaticResource InputTextBox}"/><TextBox Grid.Column="1" Text="3" Margin="8" Style="{StaticResource InputTextBox}"/><TextBox Grid.Column="2" Text="8-10" Margin="8" Style="{StaticResource InputTextBox}"/><TextBox Grid.Column="3" Text="90 seg" Margin="8" Style="{StaticResource InputTextBox}"/><TextBox Grid.Column="4" Text="40 kg" Margin="8" Style="{StaticResource InputTextBox}"/></Grid>
             </Grid>
         </Border>
     </Grid>

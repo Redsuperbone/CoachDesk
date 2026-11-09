@@ -87,7 +87,12 @@ public sealed class SupabaseClient
         request.Content = JsonContent.Create(body);
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         await EnsureSuccessAsync(response, cancellationToken);
-        return await response.Content.ReadFromJsonAsync<JsonArray>(JsonOptions, cancellationToken) ?? [];
+        // PostgREST responde correctamente sin cuerpo cuando se solicita return=minimal.
+        // No se debe intentar deserializar una respuesta vacía como JSON.
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        return string.IsNullOrWhiteSpace(content)
+            ? []
+            : JsonSerializer.Deserialize<JsonArray>(content, JsonOptions) ?? [];
     }
 
     public async Task PatchAsync(string relativeUri, JsonNode body, string accessToken, CancellationToken cancellationToken)
@@ -124,6 +129,14 @@ public sealed class SupabaseClient
         request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         await EnsureSuccessAsync(response, cancellationToken);
+    }
+
+    public async Task<(byte[] Content, string ContentType)> DownloadStorageObjectAsync(string bucket, string path, string accessToken, CancellationToken cancellationToken)
+    {
+        using var request = CreateRequest(HttpMethod.Get, $"storage/v1/object/authenticated/{bucket}/{Uri.EscapeDataString(path).Replace("%2F", "/")}", accessToken);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return (await response.Content.ReadAsByteArrayAsync(cancellationToken), response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream");
     }
 
     private HttpRequestMessage CreateRequest(HttpMethod method, string relativeUri, string? accessToken)

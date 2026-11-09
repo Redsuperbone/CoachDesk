@@ -1,10 +1,9 @@
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Net.Http;
-using Microsoft.Win32;
 using CoachDesk.Desktop.Commands;
 using CoachDesk.Desktop.Models.Anthropometry;
 using CoachDesk.Desktop.Services;
+using CoachDesk.Desktop.Views;
+using System.Windows;
 
 namespace CoachDesk.Desktop.ViewModels;
 
@@ -14,16 +13,24 @@ public sealed class PhotoEvidenceViewModel : ViewModelBase
     private int _adviseeId;
     private int _selectedMonth = 1;
     private string? _message;
-    private bool _isUploading;
+    private PhotoEvidenceItemViewModel? _frontalPhoto;
+    private PhotoEvidenceItemViewModel? _profilePhoto;
+    private PhotoEvidenceItemViewModel? _backPhoto;
 
     public PhotoEvidenceViewModel(IPhotoEvidenceService service)
     {
         _service = service;
-        UploadCommand = new AsyncRelayCommand(UploadAsync, _ => _adviseeId > 0 && !IsUploading);
+        OpenPreviewCommand = new RelayCommand(OpenPreview, value => value is PhotoEvidenceItemViewModel item && item.Preview is not null);
     }
 
-    public ObservableCollection<PhotoEvidenceDto> Photos { get; } = [];
-    public IEnumerable<int> Months => Enumerable.Range(0, 11);
+    public ObservableCollection<PhotoEvidenceItemViewModel> Photos { get; } = [];
+    public PhotoEvidenceItemViewModel? FrontalPhoto { get => _frontalPhoto; private set { if (SetProperty(ref _frontalPhoto, value)) OnPropertyChanged(nameof(HasFrontalPhoto)); } }
+    public PhotoEvidenceItemViewModel? ProfilePhoto { get => _profilePhoto; private set { if (SetProperty(ref _profilePhoto, value)) OnPropertyChanged(nameof(HasProfilePhoto)); } }
+    public PhotoEvidenceItemViewModel? BackPhoto { get => _backPhoto; private set { if (SetProperty(ref _backPhoto, value)) OnPropertyChanged(nameof(HasBackPhoto)); } }
+    public bool HasFrontalPhoto => FrontalPhoto is not null;
+    public bool HasProfilePhoto => ProfilePhoto is not null;
+    public bool HasBackPhoto => BackPhoto is not null;
+    public IEnumerable<int> Months => Enumerable.Range(1, 10);
     public int SelectedMonth
     {
         get => _selectedMonth;
@@ -39,8 +46,7 @@ public sealed class PhotoEvidenceViewModel : ViewModelBase
     public string SelectedMonthLabel => SelectedMonth == 0 ? "Inicio" : $"Mes {SelectedMonth}";
     public string? Message { get => _message; private set { if (SetProperty(ref _message, value)) OnPropertyChanged(nameof(HasMessage)); } }
     public bool HasMessage => !string.IsNullOrWhiteSpace(Message);
-    public bool IsUploading { get => _isUploading; private set { if (SetProperty(ref _isUploading, value)) UploadCommand.RaiseCanExecuteChanged(); } }
-    public AsyncRelayCommand UploadCommand { get; }
+    public RelayCommand OpenPreviewCommand { get; }
 
     public async Task LoadForAsync(int adviseeId)
     {
@@ -55,29 +61,26 @@ public sealed class PhotoEvidenceViewModel : ViewModelBase
         {
             var photos = await _service.GetAsync(_adviseeId);
             Photos.Clear();
-            foreach (var photo in photos.Where(photo => photo.Month == SelectedMonth)) Photos.Add(photo);
+            foreach (var photo in photos.Where(photo => photo.Month == SelectedMonth))
+            {
+                var item = new PhotoEvidenceItemViewModel(photo);
+                Photos.Add(item);
+                try { item.SetPreview(await _service.GetContentAsync(_adviseeId, item.Id)); }
+                catch (Exception) { /* El nombre sigue visible si no se puede descargar la miniatura. */ }
+            }
+            FrontalPhoto = Photos.FirstOrDefault(item => item.Type == "Frontal");
+            ProfilePhoto = Photos.FirstOrDefault(item => item.Type == "Perfil");
+            BackPhoto = Photos.FirstOrDefault(item => item.Type == "Espalda");
+            OpenPreviewCommand.RaiseCanExecuteChanged();
         }
         catch (Exception) { Message = "No fue posible cargar las evidencias fotográficas."; }
     }
 
-    private async Task UploadAsync(object? parameter)
+    private static void OpenPreview(object? value)
     {
-        var type = parameter as string;
-        if (type is not ("Frontal" or "Perfil" or "Espalda")) return;
-        var dialog = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.jpeg;*.png;*.webp", Multiselect = false };
-        if (dialog.ShowDialog() != true) return;
-        var info = new FileInfo(dialog.FileName);
-        if (info.Length > 1_572_864) { Message = "La imagen supera el límite de 1.5 MB."; return; }
-        var contentType = Path.GetExtension(info.Name).ToLowerInvariant() switch { ".png" => "image/png", ".webp" => "image/webp", _ => "image/jpeg" };
-        IsUploading = true; Message = null;
-        try
-        {
-            await _service.UploadAsync(_adviseeId, SelectedMonth, type, info.Name, contentType, await File.ReadAllBytesAsync(info.FullName));
-            await LoadAsync();
-            Message = $"Fotografía {type.ToLowerInvariant()} guardada para el mes {SelectedMonth}.";
-        }
-        catch (ApiException exception) { Message = exception.Message; }
-        catch (HttpRequestException) { Message = "No fue posible subir la fotografía."; }
-        finally { IsUploading = false; }
+        if (value is not PhotoEvidenceItemViewModel item || item.Preview is null) return;
+        var window = new PhotoPreviewWindow(item.Preview, $"{item.Type} · {item.FileName}") { Owner = Application.Current?.MainWindow };
+        window.ShowDialog();
     }
+
 }
