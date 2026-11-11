@@ -22,6 +22,7 @@ public sealed class AdviseeSelectorViewModel : ViewModelBase
     }
 
     public ObservableCollection<AdviseeSummaryDto> Advisees { get; } = [];
+    public int ActiveCount => Advisees.Count;
 
     public string SearchTerm
     {
@@ -110,6 +111,7 @@ public sealed class AdviseeSelectorViewModel : ViewModelBase
             {
                 Advisees.Add(advisee);
             }
+            OnPropertyChanged(nameof(ActiveCount));
 
             SelectedAdvisee = Advisees.FirstOrDefault(item => item.Id == selectedId) ?? Advisees.FirstOrDefault();
         }

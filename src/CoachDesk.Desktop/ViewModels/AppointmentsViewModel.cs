@@ -25,6 +25,7 @@ public sealed class AppointmentsViewModel : ViewModelBase
         _appointmentService = appointmentService;
         PublishCommand = new AsyncRelayCommand(_ => PublishAsync(), _ => CanPublish);
         CancelOrDeleteCommand = new AsyncRelayCommand(_ => CancelOrDeleteAsync(), _ => SelectedAppointment is not null && !IsLoading);
+        ManageAppointmentCommand = new AsyncRelayCommand(item => CancelOrDeleteAsync(item as AppointmentRowViewModel), item => item is AppointmentRowViewModel && !IsLoading);
         RefreshCommand = new AsyncRelayCommand(_ => LoadAsync(), _ => !IsLoading);
     }
 
@@ -43,6 +44,7 @@ public sealed class AppointmentsViewModel : ViewModelBase
     public bool CanPublish => !IsLoading && !IsPublishing && SelectedDate is not null && !string.IsNullOrWhiteSpace(Detail) && TryGetStart(out _);
     public AsyncRelayCommand PublishCommand { get; }
     public AsyncRelayCommand CancelOrDeleteCommand { get; }
+    public AsyncRelayCommand ManageAppointmentCommand { get; }
     public AsyncRelayCommand RefreshCommand { get; }
 
     public async Task LoadAsync()
@@ -113,15 +115,16 @@ public sealed class AppointmentsViewModel : ViewModelBase
         }
     }
 
-    private async Task CancelOrDeleteAsync()
+    private async Task CancelOrDeleteAsync(AppointmentRowViewModel? appointment = null)
     {
-        if (SelectedAppointment is null) return;
+        appointment ??= SelectedAppointment;
+        if (appointment is null) return;
         ErrorMessage = null;
         try
         {
-            if (SelectedAppointment.Status == AppointmentStatus.Booked) await _appointmentService.CancelAsync(SelectedAppointment.Id);
-            else await _appointmentService.DeleteAsync(SelectedAppointment.Id);
-            Appointments.Remove(SelectedAppointment);
+            if (appointment.Status == AppointmentStatus.Booked) await _appointmentService.CancelAsync(appointment.Id);
+            else await _appointmentService.DeleteAsync(appointment.Id);
+            Appointments.Remove(appointment);
             SelectedAppointment = null;
             SuccessMessage = "Horario actualizado correctamente.";
         }

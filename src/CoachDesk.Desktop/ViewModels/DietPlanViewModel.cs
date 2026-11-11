@@ -44,8 +44,23 @@ public sealed class DietPlanViewModel : ViewModelBase
     public string? Notes { get => _notes; set => SetProperty(ref _notes, value); }
     public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
-    public string? ErrorMessage { get => _errorMessage; private set => SetMessage(ref _errorMessage, value, nameof(HasError)); }
-    public string? SuccessMessage { get => _successMessage; private set => SetMessage(ref _successMessage, value, nameof(HasSuccess)); }
+    public string? ErrorMessage
+    {
+        get => _errorMessage;
+        private set
+        {
+            if (SetProperty(ref _errorMessage, value)) OnPropertyChanged(nameof(HasError));
+        }
+    }
+
+    public string? SuccessMessage
+    {
+        get => _successMessage;
+        private set
+        {
+            if (SetProperty(ref _successMessage, value)) OnPropertyChanged(nameof(HasSuccess));
+        }
+    }
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
     public bool HasSuccess => !string.IsNullOrWhiteSpace(SuccessMessage);
     public bool CanUsePlan => Advisee is not null && !IsLoading && !IsSaving;
@@ -116,18 +131,32 @@ public sealed class DietPlanViewModel : ViewModelBase
 
     private async Task ExportPdfAsync()
     {
-        if (Advisee is null) return;
+        ErrorMessage = null;
+        SuccessMessage = null;
+        if (Advisee is null)
+        {
+            ErrorMessage = "Selecciona un asesorado antes de exportar el PDF.";
+            return;
+        }
         var safeName = string.Concat(Advisee.FullName.Where(character => !Path.GetInvalidFileNameChars().Contains(character)));
         var outputPath = _fileDialogService.GetPdfSavePath($"Plan nutricional - {safeName}.pdf");
-        if (string.IsNullOrWhiteSpace(outputPath)) return;
+        if (string.IsNullOrWhiteSpace(outputPath))
+        {
+            SuccessMessage = "Exportación cancelada. No se creó ningún archivo.";
+            return;
+        }
         try
         {
             await _pdfExporter.ExportAsync(BuildPlan(), Advisee.FullName, outputPath);
-            SuccessMessage = "PDF exportado correctamente.";
+            SuccessMessage = $"PDF exportado correctamente en: {outputPath}";
         }
         catch (IOException)
         {
             ErrorMessage = "No fue posible escribir el archivo PDF. Verifica que no esté abierto.";
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "No fue posible generar el PDF. Revisa los datos del plan e inténtalo nuevamente.";
         }
     }
 
@@ -198,8 +227,4 @@ public sealed class DietPlanViewModel : ViewModelBase
         ExportPdfCommand.RaiseCanExecuteChanged();
     }
 
-    private void SetMessage(ref string? field, string? value, string dependentProperty)
-    {
-        if (SetProperty(ref field, value)) OnPropertyChanged(dependentProperty);
-    }
 }

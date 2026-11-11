@@ -14,4 +14,5 @@ public sealed class AnthropometricAssessmentDto
     public decimal? HipCm { get; init; }
     public decimal? ArmCm { get; init; }
     public decimal? ThighCm { get; init; }
+    public bool IsConfirmed { get; init; }
 }

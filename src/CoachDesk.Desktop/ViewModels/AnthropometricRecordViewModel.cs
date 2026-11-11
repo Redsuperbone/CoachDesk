@@ -13,6 +13,8 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
     private AdviseeSummaryDto? _advisee;
     private bool _isLoading;
     private bool _isSaving;
+    private bool _isConfirmingReview;
+    private int? _selectedReviewMonth;
     private string? _errorMessage;
     private string? _successMessage;
 
@@ -22,19 +24,25 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
         Rows = new ObservableCollection<AnthropometricMetricRowViewModel>(CreateRows());
         Photos = new PhotoEvidenceViewModel(photoEvidenceService);
         SaveCommand = new AsyncRelayCommand(_ => SaveAsync(), _ => CanSave);
+        ConfirmReviewCommand = new AsyncRelayCommand(_ => ConfirmReviewAsync(), _ => CanConfirmReview);
     }
 
     public ObservableCollection<AnthropometricMetricRowViewModel> Rows { get; }
+    public ObservableCollection<int> PendingReviewMonths { get; } = [];
     public PhotoEvidenceViewModel Photos { get; }
     public AdviseeSummaryDto? Advisee { get => _advisee; private set => SetProperty(ref _advisee, value); }
     public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
     public bool IsSaving { get => _isSaving; private set => SetProperty(ref _isSaving, value); }
+    public bool IsConfirmingReview { get => _isConfirmingReview; private set => SetProperty(ref _isConfirmingReview, value); }
+    public int? SelectedReviewMonth { get => _selectedReviewMonth; set { if (SetProperty(ref _selectedReviewMonth, value)) NotifyStateChanged(); } }
     public string? ErrorMessage { get => _errorMessage; private set => SetProperty(ref _errorMessage, value); }
     public string? SuccessMessage { get => _successMessage; private set => SetProperty(ref _successMessage, value); }
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
     public bool HasSuccess => !string.IsNullOrWhiteSpace(SuccessMessage);
     public bool CanSave => Advisee is not null && !IsLoading && !IsSaving && Rows.All(row => !row.HasErrors);
+    public bool CanConfirmReview => Advisee is not null && SelectedReviewMonth.HasValue && !IsLoading && !IsSaving && !IsConfirmingReview;
     public AsyncRelayCommand SaveCommand { get; }
+    public AsyncRelayCommand ConfirmReviewCommand { get; }
 
     public async Task LoadForAsync(AdviseeSummaryDto advisee)
     {
@@ -49,10 +57,13 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
             var profile = await _anthropometricService.GetProfileAsync(advisee.Id);
             await Photos.LoadForAsync(advisee.Id);
             ClearRows();
+            PendingReviewMonths.Clear();
             foreach (var assessment in profile.Assessments.Where(item => item.MonthNumber is >= 1 and <= 10))
             {
                 SetMonth(assessment);
+                if (!assessment.IsConfirmed && HasClinicalData(assessment)) PendingReviewMonths.Add(assessment.MonthNumber);
             }
+            SelectedReviewMonth = PendingReviewMonths.Count == 0 ? null : PendingReviewMonths[0];
         }
         catch (ApiException exception)
         {
@@ -106,6 +117,38 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
         }
     }
 
+    private async Task ConfirmReviewAsync()
+    {
+        if (!CanConfirmReview || Advisee is null || !SelectedReviewMonth.HasValue) return;
+
+        var month = SelectedReviewMonth.Value;
+        IsConfirmingReview = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+        NotifyStateChanged();
+
+        try
+        {
+            await _anthropometricService.ConfirmReviewAsync(Advisee.Id, month);
+            PendingReviewMonths.Remove(month);
+            SelectedReviewMonth = PendingReviewMonths.Count == 0 ? null : PendingReviewMonths[0];
+            SuccessMessage = $"Revisión del mes {month} confirmada.";
+        }
+        catch (ApiException exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        catch (HttpRequestException)
+        {
+            ErrorMessage = "No fue posible confirmar la revisión. Intenta nuevamente.";
+        }
+        finally
+        {
+            IsConfirmingReview = false;
+            NotifyStateChanged();
+        }
+    }
+
     private AnthropometricProfileDto BuildProfile() => new()
     {
         AdviseeId = Advisee!.Id,
@@ -150,6 +193,11 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
         }
     }
 
+    private static bool HasClinicalData(AnthropometricAssessmentDto assessment) =>
+        assessment.WeightKg.HasValue || assessment.HeightCm.HasValue || assessment.BicipitalSkinfoldMm.HasValue ||
+        assessment.TricipitalSkinfoldMm.HasValue || assessment.SubscapularSkinfoldMm.HasValue || assessment.SuprailiacSkinfoldMm.HasValue ||
+        assessment.WaistCm.HasValue || assessment.HipCm.HasValue || assessment.ArmCm.HasValue || assessment.ThighCm.HasValue;
+
     private AnthropometricMetricRowViewModel GetRow(string key) => Rows.Single(row => row.Key == key);
 
     private void NotifyStateChanged()
@@ -158,6 +206,7 @@ public sealed class AnthropometricRecordViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasSuccess));
         OnPropertyChanged(nameof(CanSave));
         SaveCommand.RaiseCanExecuteChanged();
+        ConfirmReviewCommand.RaiseCanExecuteChanged();
     }
 
     private static IEnumerable<AnthropometricMetricRowViewModel> CreateRows()

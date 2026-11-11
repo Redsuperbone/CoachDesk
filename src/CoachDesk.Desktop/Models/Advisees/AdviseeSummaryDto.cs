@@ -14,4 +14,6 @@ public sealed class AdviseeSummaryDto
     public int? Age => BirthDate is null
         ? null
         : DateTime.Today.Year - BirthDate.Value.Year - (DateTime.Today.DayOfYear < BirthDate.Value.DayOfYear ? 1 : 0);
+
+    public override string ToString() => FullName;
 }

@@ -9,9 +9,22 @@ namespace CoachDesk.Desktop;
 
 public partial class App : Application
 {
-    protected override void OnStartup(StartupEventArgs e)
+    private readonly LocalApiHost _localApiHost = new();
+
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        try
+        {
+            await _localApiHost.StartAsync();
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(exception.Message, "CoachDesk", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+            return;
+        }
 
         var options = new ApiOptions();
         var session = new AuthenticationSession();
@@ -29,35 +42,55 @@ public partial class App : Application
         var nutritionService = new NutritionService(apiService);
         var appointmentService = new AppointmentService(apiService);
         var routineService = new RoutineService(apiService);
+        var dashboardService = new DashboardService(apiService);
         var confirmationDialogService = new ConfirmationDialogService();
         var pdfExporter = new MealPlanPdfExporter();
         var fileDialogService = new FileDialogService();
 
-        LoginWindow? loginWindow = null;
-        loginWindow = new LoginWindow
-        {
-            DataContext = new LoginViewModel(authenticationService, () =>
-            {
-                var mainViewModel = new MainViewModel(
-                    session,
-                    adviseeService,
-                    anthropometricService,
-                    photoEvidenceService,
-                    nutritionService,
-                    appointmentService,
-                    routineService,
-                    confirmationDialogService,
-                    pdfExporter,
-                    fileDialogService);
-                var mainWindow = new MainWindow(mainViewModel);
-                MainWindow = mainWindow;
-                mainWindow.Show();
-                _ = mainViewModel.InitializeAsync();
-                loginWindow?.Close();
-            })
-        };
+        ShowLoginWindow();
 
-        MainWindow = loginWindow;
-        loginWindow.Show();
+        void ShowLoginWindow()
+        {
+            LoginWindow? loginWindow = null;
+            loginWindow = new LoginWindow
+            {
+                DataContext = new LoginViewModel(authenticationService, () =>
+                {
+                    MainWindow? mainWindow = null;
+                    var mainViewModel = new MainViewModel(
+                        session,
+                        adviseeService,
+                        anthropometricService,
+                        photoEvidenceService,
+                        nutritionService,
+                        appointmentService,
+                        routineService,
+                        dashboardService,
+                        confirmationDialogService,
+                        pdfExporter,
+                        fileDialogService,
+                        () =>
+                        {
+                            session.Clear();
+                            ShowLoginWindow();
+                            mainWindow?.Close();
+                        });
+                    mainWindow = new MainWindow(mainViewModel);
+                    MainWindow = mainWindow;
+                    mainWindow.Show();
+                    _ = mainViewModel.InitializeAsync();
+                    loginWindow?.Close();
+                })
+            };
+
+            MainWindow = loginWindow;
+            loginWindow.Show();
+        }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _localApiHost.Dispose();
+        base.OnExit(e);
     }
 }

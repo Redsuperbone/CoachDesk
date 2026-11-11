@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using System.Windows;
 
 namespace CoachDesk.Desktop.Services;
 
@@ -14,6 +15,6 @@ public sealed class FileDialogService : IFileDialogService
             FileName = suggestedFileName
         };
 
-        return dialog.ShowDialog() == true ? dialog.FileName : null;
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 }

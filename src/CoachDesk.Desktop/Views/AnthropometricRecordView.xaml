@@ -10,21 +10,29 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="{Binding Advisee.FullName}" Style="{StaticResource SelectedAdviseeNameText}" />
-                <TextBlock Text="Captura y compara las mediciones del mes 1 al mes 10."
-                           Style="{StaticResource CardSubtitleText}" />
-            </StackPanel>
-            <Button Grid.Column="1"
-                    Content="Volver"
-                    Command="{Binding DataContext.BackToDashboardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    Style="{StaticResource QuickActionButton}" />
-        </Grid>
+        <StackPanel>
+            <Border Style="{StaticResource AccentPanel}" Padding="10,7">
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="SELECCIONAR ASESORADO:" Style="{StaticResource FieldLabelText}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding DataContext.AdviseeSelector.Advisees, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding DataContext.AdviseeSelector.SelectedAdvisee, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding FullName}" Foreground="{StaticResource TextPrimaryBrush}" /></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Grid.Column="2" Content="⌕ Filtrar" Command="{Binding DataContext.AdviseeSelector.ReloadCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource QuickActionButton}" HorizontalAlignment="Right" Margin="0,0,8,0"/>
+                    <Button Grid.Column="3" Content="▣ Guardar mediciones" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" />
+                </Grid>
+            </Border>
+            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel><TextBlock Text="{Binding Advisee.FullName, TargetNullValue=Expediente clínico y antropométrico}" Style="{StaticResource SelectedAdviseeNameText}"/><TextBlock Text="Captura mensual exclusiva del coach: perímetros, pliegues y composición." Style="{StaticResource CardSubtitleText}"/></StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                    <TextBlock Text="REVISIÓN PENDIENTE:" Style="{StaticResource FieldLabelText}" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                    <ComboBox ItemsSource="{Binding PendingReviewMonths}" SelectedItem="{Binding SelectedReviewMonth}" Width="86" Margin="0,0,7,0" ToolTip="Mes con mediciones pendientes de confirmar">
+                        <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding StringFormat=Mes {0}}" Foreground="{StaticResource TextPrimaryBrush}"/></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Content="Confirmar" Command="{Binding ConfirmReviewCommand}" Style="{StaticResource QuickActionButton}" ToolTip="Confirma que revisaste las mediciones del mes seleccionado" />
+                </StackPanel>
+                <Button Grid.Column="2" Content="Volver" Command="{Binding DataContext.BackToDashboardCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource QuickActionButton}" />
+            </Grid>
+        </StackPanel>
 
         <StackPanel Grid.Row="1" Margin="0,16,0,14">
             <Border Background="#FFF5E7" CornerRadius="5" Padding="10"
@@ -74,8 +82,8 @@
                       RowHeight="38"
                       Style="{StaticResource AnthropometryDataGrid}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Medición" Binding="{Binding Name}" IsReadOnly="True" Width="190" />
-                    <DataGridTextColumn Header="Mes 1" Binding="{Binding Month1, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
+                    <DataGridTextColumn Header="Medición" Binding="{Binding Name}" IsReadOnly="True" Width="160" />
+                    <DataGridTextColumn Header="Mes 1" Binding="{Binding Month1, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="70" />
                     <DataGridTextColumn Header="Mes 2" Binding="{Binding Month2, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
                     <DataGridTextColumn Header="Mes 3" Binding="{Binding Month3, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />
                     <DataGridTextColumn Header="Mes 4" Binding="{Binding Month4, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, StringFormat={}{0:0.##}}" Width="90" />

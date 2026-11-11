@@ -9,16 +9,21 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Grid>
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="{Binding Advisee.FullName}" Style="{StaticResource SelectedAdviseeNameText}" />
-                <TextBlock Text="Configura comidas, porciones y macronutrientes." Style="{StaticResource CardSubtitleText}" />
-            </StackPanel>
-            <Button Grid.Column="1" Content="Volver"
-                    Command="{Binding DataContext.BackToDashboardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    Style="{StaticResource QuickActionButton}" />
-        </Grid>
+        <StackPanel>
+            <Border Style="{StaticResource AccentPanel}" Padding="10,7">
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="PLAN NUTRICIONAL PARA:" Style="{StaticResource FieldLabelText}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding DataContext.AdviseeSelector.Advisees, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding DataContext.AdviseeSelector.SelectedAdvisee, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding FullName}" Foreground="{StaticResource TextPrimaryBrush}" /></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Grid.Column="3" Content="▣ Guardar y asignar dieta" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}"/>
+                </Grid>
+            </Border>
+            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel><TextBlock Text="{Binding Advisee.FullName, TargetNullValue=Editor nutricional}" Style="{StaticResource SelectedAdviseeNameText}"/><TextBlock Text="Objetivo, porciones, macronutrientes y tiempos de comida programados." Style="{StaticResource CardSubtitleText}"/></StackPanel>
+                <Button Grid.Column="1" Content="Volver" Command="{Binding DataContext.BackToDashboardCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource QuickActionButton}" />
+            </Grid>
+        </StackPanel>
 
         <Grid Grid.Row="1" Margin="0,20,0,12">
             <Grid.ColumnDefinitions><ColumnDefinition Width="2*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
@@ -33,8 +38,8 @@
         </Grid>
 
         <StackPanel Grid.Row="2">
-            <Border Background="#FFF5E7" CornerRadius="5" Padding="10" Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding ErrorMessage}" Foreground="#9A5500" /></Border>
-            <Border Background="#E4F3EA" CornerRadius="5" Padding="10" Margin="0,8,0,0" Visibility="{Binding HasSuccess, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding SuccessMessage}" Foreground="#1D6A3A" /></Border>
+            <Border Background="#3B2530" BorderBrush="#B65264" BorderThickness="1" CornerRadius="5" Padding="9" Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding ErrorMessage}" Foreground="#FFD9DC" TextWrapping="Wrap" /></Border>
+            <Border Background="#173B33" BorderBrush="#3E947B" BorderThickness="1" CornerRadius="5" Padding="9" Margin="0,6,0,0" Visibility="{Binding HasSuccess, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding SuccessMessage}" Foreground="#B9F5D8" TextWrapping="Wrap" /></Border>
         </StackPanel>
 
         <TabControl Grid.Row="3" Margin="0,12,0,12" ItemsSource="{Binding Meals}" Style="{StaticResource MealTabControl}">

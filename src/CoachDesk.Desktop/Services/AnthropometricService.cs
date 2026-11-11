@@ -21,4 +21,10 @@ public sealed class AnthropometricService : IAnthropometricService
             $"coach/advisees/{profile.AdviseeId}/anthropometry",
             profile,
             cancellationToken);
+
+    public Task ConfirmReviewAsync(int adviseeId, int month, CancellationToken cancellationToken = default) =>
+        _apiService.PutAsync(
+            $"coach/advisees/{adviseeId}/anthropometry/{month}/confirm",
+            new { },
+            cancellationToken);
 }

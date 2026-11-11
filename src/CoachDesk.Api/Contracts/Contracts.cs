@@ -8,7 +8,7 @@ public sealed record LoginResponse(string AccessToken, string TokenType, DateTim
 public sealed record AdviseeSummaryResponse(int Id, string FullName, string? Email, string? PhoneNumber, DateOnly? BirthDate, bool IsActive, string Status, DateTimeOffset? LastAssessmentAt);
 public sealed record CreateAdviseeRequest(string FirstName, string LastName, string? Sex, DateOnly? BirthDate, string? PhoneNumber, string? Occupation, string? Goal, DateOnly? CoachingStartDate);
 public sealed record UpdateAdviseeServiceStatusRequest(bool IsActive);
-public sealed record AnthropometricAssessmentRequest(int MonthNumber, DateOnly? RecordedOn, decimal? WeightKg, decimal? HeightCm, decimal? BicipitalSkinfoldMm, decimal? TricipitalSkinfoldMm, decimal? SubscapularSkinfoldMm, decimal? SuprailiacSkinfoldMm, decimal? WaistCm, decimal? HipCm, decimal? ArmCm, decimal? ThighCm);
+public sealed record AnthropometricAssessmentRequest(int MonthNumber, DateOnly? RecordedOn, decimal? WeightKg, decimal? HeightCm, decimal? BicipitalSkinfoldMm, decimal? TricipitalSkinfoldMm, decimal? SubscapularSkinfoldMm, decimal? SuprailiacSkinfoldMm, decimal? WaistCm, decimal? HipCm, decimal? ArmCm, decimal? ThighCm, bool IsConfirmed = false);
 public sealed record AnthropometricProfileRequest(IReadOnlyList<AnthropometricAssessmentRequest> Assessments);
 public sealed record AnthropometricProfileResponse(int AdviseeId, IReadOnlyList<AnthropometricAssessmentRequest> Assessments);
 public sealed record PhotoEvidenceResponse(int Id, int Month, string Type, string FileName, long SizeBytes, DateTimeOffset UploadedAt);
@@ -26,3 +26,4 @@ public sealed record TrainingPlanSummaryResponse(int Id, string Name, DateOnly S
 public sealed record TrainingPlanExerciseResponse(string Name, short Sets, short RepsMin, short RepsMax, short RestSeconds, decimal? SuggestedLoadKg);
 public sealed record TrainingPlanDayResponse(short DayOfWeek, string Title, IReadOnlyList<TrainingPlanExerciseResponse> Exercises);
 public sealed record TrainingPlanDetailResponse(int Id, int AdviseeId, string Name, DateOnly StartDate, int Version, IReadOnlyList<TrainingPlanDayResponse> Days);
+public sealed record DashboardReviewSummaryResponse(int PendingReviews);

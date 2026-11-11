@@ -2,104 +2,41 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:CoachDesk.Desktop.Views"
-        Title="Coach Desk | Manríquez Gym" Width="1180" Height="760"
-        MinWidth="900" MinHeight="600" WindowStartupLocation="CenterScreen">
+        Title="Coach Desk | Manríquez Gym" Width="1280" Height="760"
+        MinWidth="960" MinHeight="580" WindowStartupLocation="CenterScreen">
     <Grid Background="{StaticResource SurfaceBrush}">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="218" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="185" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
         <Border Background="{StaticResource BrandPrimaryBrush}">
-            <Grid Margin="16">
+            <Grid Margin="12">
                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                 <StackPanel>
                     <TextBlock Text="🏋  COACH DESK" Style="{StaticResource SidebarTitleText}" />
-                    <Separator Margin="0,15,0,15" Background="#35465D" />
+                    <Separator Margin="0,10,0,10" Background="#35465D" />
                 </StackPanel>
                 <StackPanel Grid.Row="1">
-                    <Button Content="▣  Dashboard General" Command="{Binding BackToDashboardCommand}" Style="{StaticResource NavButton}" />
-                    <Button Content="▤  Expediente y Perfil" Command="{Binding OpenAnthropometricCommand}" Style="{StaticResource NavButton}" />
-                    <Button Content="◉  Gestión de Citas" Command="{Binding OpenAppointmentsCommand}" Style="{StaticResource NavButton}" />
-                    <Button Content="⚑  Constructor Rutinas" Command="{Binding OpenRoutinesCommand}" Style="{StaticResource NavButton}" />
-                    <Button Content="◉  Editor de Dietas" Command="{Binding OpenNutritionCommand}" Style="{StaticResource NavButton}" />
+                    <Button Content="▣  Dashboard General" Command="{Binding BackToDashboardCommand}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers><DataTrigger Binding="{Binding CurrentPage, Converter={StaticResource PageIsCurrentConverter}, ConverterParameter=Dashboard}" Value="True"><Setter Property="Background" Value="{StaticResource BrandAccentBrush}"/><Setter Property="Foreground" Value="#06121F"/></DataTrigger></Style.Triggers></Style></Button.Style></Button>
+                    <Button Content="▤  Expediente y Perfil" Command="{Binding OpenAnthropometricCommand}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers><DataTrigger Binding="{Binding CurrentPage, Converter={StaticResource PageIsCurrentConverter}, ConverterParameter=Anthropometry}" Value="True"><Setter Property="Background" Value="{StaticResource BrandAccentBrush}"/><Setter Property="Foreground" Value="#06121F"/></DataTrigger></Style.Triggers></Style></Button.Style></Button>
+                    <Button Content="◉  Gestión de Citas" Command="{Binding OpenAppointmentsCommand}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers><DataTrigger Binding="{Binding CurrentPage, Converter={StaticResource PageIsCurrentConverter}, ConverterParameter=Appointments}" Value="True"><Setter Property="Background" Value="{StaticResource BrandAccentBrush}"/><Setter Property="Foreground" Value="#06121F"/></DataTrigger></Style.Triggers></Style></Button.Style></Button>
+                    <Button Content="⚑  Constructor Rutinas" Command="{Binding OpenRoutinesCommand}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers><DataTrigger Binding="{Binding CurrentPage, Converter={StaticResource PageIsCurrentConverter}, ConverterParameter=Routines}" Value="True"><Setter Property="Background" Value="{StaticResource BrandAccentBrush}"/><Setter Property="Foreground" Value="#06121F"/></DataTrigger></Style.Triggers></Style></Button.Style></Button>
+                    <Button Content="◉  Editor de Dietas" Command="{Binding OpenNutritionCommand}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource NavButton}"><Style.Triggers><DataTrigger Binding="{Binding CurrentPage, Converter={StaticResource PageIsCurrentConverter}, ConverterParameter=Nutrition}" Value="True"><Setter Property="Background" Value="{StaticResource BrandAccentBrush}"/><Setter Property="Foreground" Value="#06121F"/></DataTrigger></Style.Triggers></Style></Button.Style></Button>
                 </StackPanel>
                 <StackPanel Grid.Row="2">
                     <Button Content="↻  Reactivar asesorados" Command="{Binding OpenInactiveAdviseesCommand}" Style="{StaticResource NavButton}" />
-                    <Button Content="▮  Cerrar sesión" Style="{StaticResource NavButton}" />
+                    <Button Content="▮  Cerrar sesión" Command="{Binding LogoutCommand}" Style="{StaticResource NavButton}" />
                 </StackPanel>
             </Grid>
         </Border>
         <Grid Grid.Column="1">
-            <Grid.RowDefinitions><RowDefinition Height="56" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+            <Grid.RowDefinitions><RowDefinition Height="40" /><RowDefinition Height="*" /></Grid.RowDefinitions>
             <Border Background="#1D2B3E" BorderBrush="#33445B" BorderThickness="0,0,0,1">
-                <Grid Margin="24,0">
+                <Grid Margin="16,0">
                     <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitleText}" VerticalAlignment="Center" />
                     <TextBlock Text="{Binding CoachName, StringFormat=Coach Administrador · {0}}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center" />
                 </Grid>
             </Border>
-            <Grid Grid.Row="1" Margin="24">
-            <Grid Grid.Row="1" Margin="0"
-                  Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Dashboard}">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="350" /><ColumnDefinition Width="24" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <Border Style="{StaticResource ContentCard}" Padding="20">
-                    <Grid>
-                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="Asesorados activos" Style="{StaticResource CardTitleText}" />
-                                <TextBlock Text="Busca y abre un expediente" Style="{StaticResource CardSubtitleText}" />
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="↻" Command="{Binding AdviseeSelector.ReloadCommand}" Style="{StaticResource IconButton}" ToolTip="Actualizar lista" />
-                        </Grid>
-                        <TextBox Grid.Row="1" Margin="0,18,0,12" Text="{Binding AdviseeSelector.SearchTerm, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SearchTextBox}" ToolTip="Buscar por nombre" />
-                        <Border Grid.Row="2" Background="#FFF5E7" CornerRadius="5" Padding="10" Visibility="{Binding AdviseeSelector.HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <TextBlock Text="{Binding AdviseeSelector.ErrorMessage}" Foreground="#9A5500" TextWrapping="Wrap" />
-                        </Border>
-                        <Grid Grid.Row="3" Margin="0,12,0,0">
-                            <ListBox ItemsSource="{Binding AdviseeSelector.Advisees}" SelectedItem="{Binding AdviseeSelector.SelectedAdvisee}" Style="{StaticResource AdviseeListBox}">
-                                <ListBox.ItemTemplate><DataTemplate><StackPanel>
-                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                                    <TextBlock Text="{Binding Email}" Margin="0,3,0,0" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
-                                </StackPanel></DataTemplate></ListBox.ItemTemplate>
-                            </ListBox>
-                            <Border Background="#D9FFFFFF" Visibility="{Binding AdviseeSelector.IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <ProgressBar IsIndeterminate="True" Width="140" Height="5" />
-                                    <TextBlock Text="Cargando asesorados..." Margin="0,12,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </Grid>
-                </Border>
-                <Border Grid.Column="2" Style="{StaticResource ContentCard}" Padding="32">
-                    <Grid>
-                        <StackPanel Visibility="{Binding HasSelectedAdvisee, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <TextBlock Text="Expediente seleccionado" Style="{StaticResource CardSubtitleText}" />
-                            <TextBlock Text="{Binding SelectedAdvisee.FullName}" Margin="0,7,0,0" Style="{StaticResource SelectedAdviseeNameText}" />
-                            <TextBlock Text="{Binding SelectedAdvisee.Email}" Margin="0,5,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <Separator Margin="0,28,0,22" Background="#E2E8E4" />
-                            <TextBlock Text="Accesos rápidos" Style="{StaticResource CardTitleText}" />
-                            <WrapPanel Margin="0,14,0,0">
-                                <Button Content="Ver expediente" Command="{Binding OpenAnthropometricCommand}" Style="{StaticResource QuickActionButton}" />
-                                <Button Content="Registrar medición" Command="{Binding OpenAnthropometricCommand}" Style="{StaticResource QuickActionButton}" />
-                                <Button Content="Crear dieta" Command="{Binding OpenNutritionCommand}" Style="{StaticResource QuickActionButton}" />
-                            </WrapPanel>
-                            <Separator Margin="0,16,0,16" Background="#E2E8E4" />
-                            <TextBlock Text="Gestión del servicio" Style="{StaticResource CardTitleText}" />
-                            <TextBlock Text="Pausa temporalmente el servicio o marca el expediente como baja, conservando su historial." Margin="0,4,0,12" Style="{StaticResource CardSubtitleText}" TextWrapping="Wrap" />
-                            <WrapPanel>
-                                <Button Content="Pausar servicio" Command="{Binding PauseServiceCommand}" Style="{StaticResource QuickActionButton}" />
-                                <Button Content="Dar de baja definitiva" Command="{Binding DeleteAdviseeCommand}" Style="{StaticResource DangerButton}" />
-                            </WrapPanel>
-                            <Border Background="#E4F3EA" CornerRadius="5" Padding="10" Margin="0,8,0,0" Visibility="{Binding HasManagementMessage, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock Text="{Binding ManagementMessage}" Foreground="#1D6A3A" TextWrapping="Wrap" />
-                            </Border>
-                        </StackPanel>
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding HasSelectedAdvisee, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-                            <TextBlock Text="Selecciona un asesorado" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
-                            <TextBlock Text="Usa el buscador para abrir rápidamente su expediente." Margin="0,9,0,0" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-                        </StackPanel>
-                    </Grid>
-                </Border>
-            </Grid>
+            <Grid Grid.Row="1" Margin="16">
+            <views:DashboardView DataContext="{Binding}"
+                  Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Dashboard}" />
             <Border Grid.Row="1" Margin="0" Style="{StaticResource ContentCard}"
                     Visibility="{Binding CurrentPage, Converter={StaticResource PageToVisibilityConverter}, ConverterParameter=Registration}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
